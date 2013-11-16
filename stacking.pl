@@ -26,25 +26,25 @@ display_container(Container) :-
     % red cut, since it could cut branches if multiple sizes are
     % defined for the same container, but since it should not be the
     % case, that's fine
-    display_container(Container, position(1, H, 1), size(W, H, D)), !.
+    display_container(Container, position(1, H, 1), size(W, H, D)).
 
-display_container(_, position(W, 1, D), size(W, _, D)).
+display_container(_, position(W, 1, D), size(W, _, D)) :- !.
 display_container(Container, position(W, 1, Z), size(W, H, D)) :-
     display_pos(Container, position(W, 1, Z)),
     nl, nl,
     Z1 is Z+1,
-    display_container(Container, position(1, H, Z1), size(W, H, D)).
+    display_container(Container, position(1, H, Z1), size(W, H, D)), !.
 display_container(Container, position(W, Y, Z), size(W, H, D)) :-
     display_pos(Container, position(W, Y, Z)),
     nl,
     Y1 is Y-1,
-    display_container(Container, position(1, Y1, Z), size(W, H, D)).
+    display_container(Container, position(1, Y1, Z), size(W, H, D)), !.
 display_container(Container, position(X, Y, Z), size(W, H, D)) :-
     X =< W, Y =< H, Z =< D,
     display_pos(Container, position(X, Y, Z)),
     tab(1),
     X1 is X+1,
-    display_container(Container, position(X1, Y, Z), size(W, H, D)).
+    display_container(Container, position(X1, Y, Z), size(W, H, D)), !.
 
 display_pos(Container, position(X, Y, Z)) :-
     % red cut, since if a position is occupied multiple times it will
