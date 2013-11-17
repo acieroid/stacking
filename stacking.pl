@@ -57,55 +57,57 @@ display_pos(_, _) :-
 %% is_inside(+Container, +Pos)
 % verify if a position is correctly inside a container
 is_inside(Container, position(X, Y, Z)) :-
-    X > 0, Y > 0, Z > 0,
     container_size(Container, size(SX, SY, SZ)),
-    X =< SX, Y =< SY, Z =< SZ.
+    between(1, SX, X),
+    between(1, SY, Y),
+    between(1, SZ, Z).
 
 %% occupied_by(+Container, +Pos, -Id)
 % Return the object that occupies a certain position in a container.
 occupied_by(Container, position(X, Y, Z), Id) :-
     is_at(Container, position(OX, OY, OZ), object(Id, size(SX, SY, SZ))),
-    X >= OX, X < OX+SX,
-    Y >= OY, Y < OY+SY,
-    Z >= OZ, Z < OZ+SZ.
+    EX is OX+SX-1, EY is OY+SY-1, EZ is OZ+SZ-1,
+    between(OX, EX, X),
+    between(OY, EY, Y),
+    between(OZ, EZ, Z).
 
 %% has_base(+Container, +Pos)
-% verify if the position has something beneath it, to serve as a
+% Verify if the position has something beneath it, to serve as a
 % base
 has_base(Container, position(X, Y, Z)) :-
+    Y > 1,
     Y1 is Y-1,
-    occupied_by(Container, position(X, Y1, Z)).
+    id_occupied(Container, position(X, Y1, Z)).
+has_base(_, position(_, 1, _)).
 
 %% is_occupied(+Container, +Pos)
 % Verify if a position of a container is occupied
 is_occupied(Container, Pos) :-
     occupied_by(Container, Pos, _).
 
+%% is_free(+Container, +Pos)
+% Verify if a position of a container is free
+is_free(Container, Pos) :-
+    not(is_occupied(Container, Pos)).
+
+%% is_valid(+Container, +Pos)
+% Verify if a position can be occupied by a new object
+is_valid(Container, Pos) :-
+    is_inside(Container, Pos),
+    has_base(Container, Pos),
+    is_free(Container, Pos).
+
 %% is_legal(+Container, +Pos, +Object)
-% check if it is legal to put an object at a given position in a
+% Check if it is legal to put an object at a given position in a
 % container
 is_legal(Container, position(X, Y, Z), object(_, size(SX, SY, SZ))) :-
-    % not -1, since we'll check until equality
-    EX is X+SX, EY is Y+SY, EZ is Z+SZ,
-    is_legal(Container, position(X, Y, Z), position(X, Y, Z),
-             position(EX, EY, EZ)).
-
-is_legal(_, _, End, End).
-is_legal(Container, position(SX, SY, SZ), position(_, EY, Z),
-         position(EX, EY, EZ)) :-
-    Z1 is Z+1,
-    is_legal(Container, position(SX, SY, SZ), position(SX, SY, Z1),
-             position(EX, EY, EZ)).
-is_legal(Container, position(SX, SY, SZ), position(EX, Y, Z),
-         position(EX, EY, EZ)) :-
-    Y1 is Y+1,
-    is_legal(Container, position(SX, SY, SZ), position(SX, Y1, Z),
-             position(EX, EY, EZ)).
-is_legal(Container, Start, position(X, Y, Z), position(EX, EY, EZ)) :-
-    not(is_occupied(Container, position(X, Y, Z))),
-    X1 is X+1,
-    is_legal(Container, Start, position(X1, Y, Z),
-             position(EX, EY, EZ)).
+    EX is X+SX-1, EY is Y+SY-1, EZ is Z+SZ-1,
+    findall(Pos, in_square(position(X, Y, Z), position(EX, EY, EZ), Pos),
+            Positions),
+    exclude(is_valid(Container), Positions, Invalid),
+    length(Positions, N),
+    N > 0,
+    length(Invalid, 0).
 
 %% place(+Container, +Pos, +Object)
 % Place an object at a certain position in a container. Check if the
