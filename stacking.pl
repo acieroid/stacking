@@ -1,42 +1,66 @@
-[data1].
-
 %% container_size(+Container, -Size)
-% specifies the size of the container (10x10x1 for each container in
+% Specifies the size of the container (10x10x1 for each container in
 % the original assignment)
 container_size(1, size(10, 10, 1)).
 container_size(2, size(10, 10, 1)).
 
 %% is_at(?Container, ?Pos, ?Obj)
-% dynamic predicate that associates an object (functor object(Id,
+% Dynamic predicate that associates an object (functor object(Id,
 % Size), as defined in the data sets) to a position (functor
 % position(X, Y, Z)) inside a container (number). The position
 % indicates the bottom left point of the box
 :- dynamic is_at/3.
 
+%% clear_containers
+% Remove all the boxes from a container
+clear_containers :-
+    retractall(is_at).
+
 %% evaluate(+Method, -Score)
-% evaluate the current configuration, based on a certain method:
+% Evaluate the current configuration, based on a certain method:
 %   - count: maximize the number of objects placed in the containers
 %TODO.
 
+%% display_line(+Size)
+% Display a line of underscores of size Size
+display_line(0) :- !.
+display_line(N) :-
+    N > 0,
+    N1 is N-1,
+    write('_'),
+    display_line(N1).
+
 %% display_container(+Container)
-% nicely displays a container, one level of depth at a time (Z=1, then
+% Nicely displays a container, one level of depth at a time (Z=1, then
 % Z=2, etc.)
 display_container(Container) :-
     container_size(Container, size(W, H, D)),
     % red cut, since it could cut branches if multiple sizes are
     % defined for the same container, but since it should not be the
     % case, that's fine
-    display_container(Container, position(1, H, 1), size(W, H, D)).
+    write('|'),
+    display_container(Container, position(1, H, 1), size(W, H, D)),
+    %write('+'),
+    %display_line(W),
+%    write('+'),
+    nl, nl.
 
-display_container(_, position(W, 1, D), size(W, _, D)) :- !.
+display_container(Container, position(W, 1, D), size(W, _, D)) :-
+    display_pos(Container, position(W, 1, D)),
+    write('|'), nl,
+    W2 is W*2-1,
+    write('+'), display_line(W2), write('+'), nl, !.
 display_container(Container, position(W, 1, Z), size(W, H, D)) :-
     display_pos(Container, position(W, 1, Z)),
+    write('|'), nl,
+    W2 is W*2-1,
+    write('+'), display_line(W2), write('+'),
     nl, nl,
     Z1 is Z+1,
     display_container(Container, position(1, H, Z1), size(W, H, D)), !.
 display_container(Container, position(W, Y, Z), size(W, H, D)) :-
     display_pos(Container, position(W, Y, Z)),
-    nl,
+    write('|'), nl, write('|'),
     Y1 is Y-1,
     display_container(Container, position(1, Y1, Z), size(W, H, D)), !.
 display_container(Container, position(X, Y, Z), size(W, H, D)) :-
@@ -54,7 +78,7 @@ display_pos(Container, position(X, Y, Z)) :-
 display_pos(_, _) :-
     write(' ').
 
-%% is_inside(+Container, +Pos)
+%% Is_inside(+Container, +Pos)
 % verify if a position is correctly inside a container
 is_inside(Container, position(X, Y, Z)) :-
     container_size(Container, size(SX, SY, SZ)),
@@ -77,7 +101,7 @@ occupied_by(Container, position(X, Y, Z), Id) :-
 has_base(Container, position(X, Y, Z)) :-
     Y > 1,
     Y1 is Y-1,
-    id_occupied(Container, position(X, Y1, Z)).
+    is_occupied(Container, position(X, Y1, Z)).
 has_base(_, position(_, 1, _)).
 
 %% is_occupied(+Container, +Pos)
@@ -94,20 +118,31 @@ is_free(Container, Pos) :-
 % Verify if a position can be occupied by a new object
 is_valid(Container, Pos) :-
     is_inside(Container, Pos),
-    has_base(Container, Pos),
     is_free(Container, Pos).
 
-%% is_legal(+Container, +Pos, +Object)
+%% bases(+Object, +Pos, -Positions)
+% Bind Positions to the positions of the base of the object (its
+% bottom layer)
+bases(object(_, size(SX, _, SZ)), position(X, Y, Z), Positions) :-
+    EX is X+SX-1, EZ is Z+SZ-1,
+    findall(Pos, in_square(position(X, Y, Z), position(EX, Y, EZ), Pos),
+            Positions).
+
+%% is_legal(+Container, +Object, +Pos)
 % Check if it is legal to put an object at a given position in a
 % container
-is_legal(Container, position(X, Y, Z), object(_, size(SX, SY, SZ))) :-
+is_legal(Container, object(Id, size(SX, SY, SZ)), position(X, Y, Z)) :-
     EX is X+SX-1, EY is Y+SY-1, EZ is Z+SZ-1,
     findall(Pos, in_square(position(X, Y, Z), position(EX, EY, EZ), Pos),
             Positions),
     exclude(is_valid(Container), Positions, Invalid),
     length(Positions, N),
     N > 0,
-    length(Invalid, 0).
+    length(Invalid, 0),
+    bases(object(Id, size(SX, SY, SZ)), position(X, Y, Z), BasePositions),
+    include(has_base(Container), BasePositions, ValidBases),
+    length(BasePositions, N1),
+    length(ValidBases, N1).
 
 %% place(+Container, +Pos, +Object)
 % Place an object at a certain position in a container. Check if the
@@ -146,11 +181,43 @@ in_square(position(X1, Y1, Z1), position(X2, Y2, Z2), position(X, Y, Z)) :-
     between(Y1, Y2, Y),
     between(Z1, Z2, Z).
 
+%% possible_positions(+Container, +Object, -Positions)
+% Bind Positions to all the possible (valid) positions that can take
+% Object in Container.
+possible_positions(Container, Object, Positions) :-
+    container_size(Container, size(SX, SY, SZ)),
+    findall(Pos, in_square(position(1, 1, 1), position(SX, SY, SZ), Pos),
+            InSquare),
+    include(is_legal(Container, Object), InSquare, Positions).
+
 %% stack(+Objects, +Containers, -ObjectsAndPositions)
-%% stack(Objects, Containers, [[Object, Position]|Res]) :-
-%%     pick(Containers, Container),
-%%     pick_and_remove(Objects, NewObjects, Object),
-%%     possible_positions(Container, Object, Positions), % TODO
-%%     pick(Positions, Position),
-%%     place(Container, Position, Object),
-%%     stack(NewObjects, Containers, Res).
+% Not working properly yet
+stack(_, _, []).
+stack(Objects, Containers, [[Object, Container, Position]|Res]) :-
+    pick(Containers, Container),
+    pick_and_remove(Objects, NewObjects, Object),
+    possible_positions(Container, Object, Positions),
+    pick(Positions, Position),
+    place(Container, Position, Object),
+    stack(NewObjects, Containers, Res).
+
+%% stack_data1
+% Run on first dataset
+stack_data1 :-
+    clear_containers,
+    stack([object(1,size(5,1,1)), object(2,size(5,7,1)),
+           object(3,size(2,1,1)), object(4,size(1,1,1)),
+           object(5,size(3,2,1)), object(6,size(5,1,1)),
+           object(7,size(1,5,1)), object(8,size(4,3,1)),
+           object(9,size(4,7,1)), object(10,size(4,2,1)),
+           object(11,size(1,6,1)), object(12,size(2,4,1)),
+           object(13,size(7,4,1)), object(14,size(6,7,1)),
+           object(15,size(4,7,1)), object(16,size(5,3,1)),
+           object(17,size(3,5,1)), object(18,size(1,1,1))],
+          [1, 2],
+          L),
+    length(L, 1),
+    write('Container 1:'), nl,
+    display_container(1),
+    write('Container 2:'), nl,
+    display_container(2).
