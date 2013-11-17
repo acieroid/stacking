@@ -84,14 +84,14 @@ is_occupied(Container, Pos) :-
 %% is_legal(+Container, +Pos, +Object)
 % check if it is legal to put an object at a given position in a
 % container
-is_legal(Container, position(X, Y, Z), object(Id, size(SX, SY, SZ))) :-
+is_legal(Container, position(X, Y, Z), object(_, size(SX, SY, SZ))) :-
     % not -1, since we'll check until equality
     EX is X+SX, EY is Y+SY, EZ is Z+SZ,
     is_legal(Container, position(X, Y, Z), position(X, Y, Z),
              position(EX, EY, EZ)).
 
-is_legal(Container, Start, End, End).
-is_legal(Container, position(SX, SY, SZ), position(X, EY, Z),
+is_legal(_, _, End, End).
+is_legal(Container, position(SX, SY, SZ), position(_, EY, Z),
          position(EX, EY, EZ)) :-
     Z1 is Z+1,
     is_legal(Container, position(SX, SY, SZ), position(SX, SY, Z1),
@@ -100,12 +100,12 @@ is_legal(Container, position(SX, SY, SZ), position(EX, Y, Z),
          position(EX, EY, EZ)) :-
     Y1 is Y+1,
     is_legal(Container, position(SX, SY, SZ), position(SX, Y1, Z),
-             position(EX, EY, EZ)),
+             position(EX, EY, EZ)).
 is_legal(Container, Start, position(X, Y, Z), position(EX, EY, EZ)) :-
     not(is_occupied(Container, position(X, Y, Z))),
     X1 is X+1,
     is_legal(Container, Start, position(X1, Y, Z),
-             position(EX, EY, EZ))
+             position(EX, EY, EZ)).
 
 %% place(+Container, +Pos, +Object)
 % Place an object at a certain position in a container. Check if the
@@ -118,3 +118,37 @@ place(Container, position(X, Y, Z), object(Id, size(SX, SY, SZ))) :-
     is_inside(Container, position(X1, Y1, Z1)),
     assert(is_at(Container, position(X, Y, Z),
                  object(Id, size(SX, SY, SZ)))).
+place(Container, Pos, Object) :-
+    % This will retract the asserted predicates when backtracking
+    % http://awarth.blogspot.be/2008/08/asserts-and-retracts-with-automatic.html
+    retract(is_at(Container, Pos, Object)).
+
+%% pick_element(+List, -Element)
+% Pick an element from a list
+pick([H|_], H).
+pick([_|T], Element) :-
+    pick(T, Element).
+
+%% pick_object(+List, -Element, -NewList)
+% Pick an element from a list and removes it
+pick_and_remove([H|T], T, H).
+pick_and_remove([H|T], [H|T1], Object) :-
+    pick_and_remove(T, T1, Object).
+
+%% in_square(+BottomLeft, +TopRight, ?Position)
+% Bind Position to a position in the square described by BottomLeft
+% and TopRight. Can be used to check that Position is inside this
+% square too.
+in_square(position(X1, Y1, Z1), position(X2, Y2, Z2), position(X, Y, Z)) :-
+    between(X1, X2, X),
+    between(Y1, Y2, Y),
+    between(Z1, Z2, Z).
+
+%% stack(+Objects, +Containers, -ObjectsAndPositions)
+%% stack(Objects, Containers, [[Object, Position]|Res]) :-
+%%     pick(Containers, Container),
+%%     pick_and_remove(Objects, NewObjects, Object),
+%%     possible_positions(Container, Object, Positions), % TODO
+%%     pick(Positions, Position),
+%%     place(Container, Position, Object),
+%%     stack(NewObjects, Containers, Res).
