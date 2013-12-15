@@ -14,7 +14,7 @@ container_size(2, size(10, 10, 1)).
 %% clear_containers
 % Remove all the boxes from a container
 clear_containers :-
-    retractall(is_at).
+    retractall(is_at(_, _, _)).
 
 %% evaluate(+Method, -Score)
 % Evaluate the current configuration, based on a certain method:
