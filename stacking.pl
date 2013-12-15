@@ -219,6 +219,7 @@ stack(Objects, Containers, [[Object, Container, Position]|Res]) :-
 
 %% stack_debug1
 % Run on a simple debug dataset
+% Working as exepcted
 stack_debug1(L) :-
     clear_containers,
     stack([object(1, size(1,1,1))],
@@ -232,6 +233,7 @@ stack_debug1(L) :-
 
 %% stack_data1
 % Run on first dataset
+% Not working
 stack_data1 :-
     clear_containers,
     stack([object(1,size(5,1,1)), object(2,size(5,7,1)),
