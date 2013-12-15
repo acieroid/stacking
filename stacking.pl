@@ -163,7 +163,8 @@ place(Container, position(X, Y, Z), object(Id, size(SX, SY, SZ))) :-
 place(Container, Pos, Object) :-
     % This will retract the asserted predicates when backtracking
     % http://awarth.blogspot.be/2008/08/asserts-and-retracts-with-automatic.html
-    retract(is_at(Container, Pos, Object)).
+    retract(is_at(Container, Pos, Object)),
+    fail.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
