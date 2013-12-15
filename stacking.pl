@@ -21,6 +21,10 @@ clear_containers :-
 %   - count: maximize the number of objects placed in the containers
 %TODO.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                            Display functions                             %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% display_line(+Size)
 % Display a line of underscores of size Size
 display_line(0) :- !.
@@ -40,9 +44,6 @@ display_container(Container) :-
     % case, that's fine
     write('|'),
     display_container(Container, position(1, H, 1), size(W, H, D)),
-    %write('+'),
-    %display_line(W),
-%    write('+'),
     nl, nl.
 
 display_container(Container, position(W, 1, D), size(W, _, D)) :-
@@ -77,6 +78,10 @@ display_pos(Container, position(X, Y, Z)) :-
     write(Id).
 display_pos(_, _) :-
     write(' ').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                             Placement logic                              %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Is_inside(+Container, +Pos)
 % verify if a position is correctly inside a container
@@ -160,6 +165,11 @@ place(Container, Pos, Object) :-
     % http://awarth.blogspot.be/2008/08/asserts-and-retracts-with-automatic.html
     retract(is_at(Container, Pos, Object)).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                               Main loop                                  %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% pick_element(+List, -Element)
 % Pick an element from a list
 pick([H|_], H).
@@ -200,6 +210,24 @@ stack(Objects, Containers, [[Object, Container, Position]|Res]) :-
     pick(Positions, Position),
     place(Container, Position, Object),
     stack(NewObjects, Containers, Res).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                 Examples                                 %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% stack_debug1
+% Run on a simple debug dataset
+stack_debug1(L) :-
+    clear_containers,
+    stack([object(1, size(1,1,1))],
+          [1, 2],
+          L),
+    length(L, 1),
+    write('Container 1:'), nl,
+    display_container(1),
+    write('Container 2:'), nl,
+    display_container(2).
 
 %% stack_data1
 % Run on first dataset
