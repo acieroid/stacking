@@ -71,6 +71,8 @@ display_container(Container, position(X, Y, Z), size(W, H, D)) :-
     X1 is X+1,
     display_container(Container, position(X1, Y, Z), size(W, H, D)), !.
 
+%% display_pos(+Container, +Pos)
+% Display what is contained at the given position in the given container
 display_pos(Container, position(X, Y, Z)) :-
     % red cut, since if a position is occupied multiple times it will
     % cut successful branches, but it should never be the case
@@ -78,6 +80,16 @@ display_pos(Container, position(X, Y, Z)) :-
     write(Id).
 display_pos(_, _) :-
     write(' ').
+
+%% display_containers
+% Display all the containers
+% TODO: don't depend on the fact that there is two containers
+% TODO: display containers side by side (more compact, more intuitive).
+display_containers :-
+    write('Container 1:'), nl,
+    display_container(1),
+    write('Container 2:'), nl,
+    display_container(2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                             Placement logic                              %%%
@@ -217,38 +229,39 @@ stack(Objects, Containers, [[Object, Container, Position]|Res]) :-
 %%%                                 Examples                                 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% stack_n(+Data, +N) :-
+% Try to stack n objects contained in Data inside the containers
+stack_n(Data, N) :-
+    clear_containers,
+    length(L, N),
+    stack(Data,
+          [1, 2],
+          L),
+    display_containers.
+
+%% stack_all(+Data) :-
+% Try to stack all the objects contained in Data inside the containers
+stack_all(Data) :-
+    length(Data, N),
+    stack_n(Data, N).
+
 %% stack_debug1
 % Run on a simple debug dataset
 % Working as exepcted
-stack_debug1(L) :-
-    clear_containers,
-    stack([object(1, size(1,1,1))],
-          [1, 2],
-          L),
-    length(L, 1),
-    write('Container 1:'), nl,
-    display_container(1),
-    write('Container 2:'), nl,
-    display_container(2).
+stack_debug1 :-
+    stack_all([object(1, size(1,1,1))]).
 
 %% stack_data1
 % Run on first dataset
 % Not working
 stack_data1 :-
-    clear_containers,
-    stack([object(1,size(5,1,1)), object(2,size(5,7,1)),
-           object(3,size(2,1,1)), object(4,size(1,1,1)),
-           object(5,size(3,2,1)), object(6,size(5,1,1)),
-           object(7,size(1,5,1)), object(8,size(4,3,1)),
-           object(9,size(4,7,1)), object(10,size(4,2,1)),
-           object(11,size(1,6,1)), object(12,size(2,4,1)),
-           object(13,size(7,4,1)), object(14,size(6,7,1)),
-           object(15,size(4,7,1)), object(16,size(5,3,1)),
-           object(17,size(3,5,1)), object(18,size(1,1,1))],
-          [1, 2],
-          L),
-    length(L, 1),
-    write('Container 1:'), nl,
-    display_container(1),
-    write('Container 2:'), nl,
-    display_container(2).
+    stack_n([object(1,size(5,1,1)), object(2,size(5,7,1)),
+             object(3,size(2,1,1)), object(4,size(1,1,1)),
+             object(5,size(3,2,1)), object(6,size(5,1,1)),
+             object(7,size(1,5,1)), object(8,size(4,3,1)),
+             object(9,size(4,7,1)), object(10,size(4,2,1)),
+             object(11,size(1,6,1)), object(12,size(2,4,1)),
+             object(13,size(7,4,1)), object(14,size(6,7,1)),
+             object(15,size(4,7,1)), object(16,size(5,3,1)),
+             object(17,size(3,5,1)), object(18,size(1,1,1))],
+           15).
