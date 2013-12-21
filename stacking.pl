@@ -1,3 +1,11 @@
+%% TODO:
+%%   - take weight (proportional to volume) into account
+%%   - change the pick policy (eg. biggest first)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                     Container representation                             %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% container_size(+Container, -Size)
 % Specifies the size of the container (10x10x1 for each container in
 % the original assignment)
@@ -20,6 +28,13 @@ clear_containers :-
 % Evaluate the current configuration, based on a certain method:
 %   - count: maximize the number of objects placed in the containers
 %TODO.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                          Object representation                           %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+weight(object(_, size(W, H, D)), Weight) :-
+    % Weight is proportional to the volume of the object.
+    Weight is W*H*D.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Display functions                             %%%
