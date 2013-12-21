@@ -1,6 +1,18 @@
 %% TODO:
-%%   - take weight (proportional to volume) into account
-%%   - change the pick policy (eg. biggest first)
+%%
+%% Improve results:
+%%   - change the pick policy (eg. biggest first): it would probably
+%%   improve a bit the result, but is not very flexible
+%%   OR
+%%   - generate the tree and explore it in a best-first search way,
+%%   which would be more flexible
+%% (Both could be made in order to compare the results of the two approaches).
+%%
+%% Extensions:
+%%  - Rotate objects
+%%  - Try 3D
+%%  - Improve output
+%%  - Generate an image for the visualization
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                     Container representation                             %%%
