@@ -264,13 +264,11 @@ stack_all(Data) :-
 
 %% stack_debug1
 % Run on a simple debug dataset
-% Working as exepcted
 stack_debug1 :-
     stack_all([object(1, size(1,1,1))]).
 
 %% stack_data1
-% Run on first dataset
-% Not working
+% Run on data1.txt dataset
 stack_data1 :-
     stack_n([object(1,size(5,1,1)), object(2,size(5,7,1)),
              object(3,size(2,1,1)), object(4,size(1,1,1)),
@@ -282,3 +280,61 @@ stack_data1 :-
              object(15,size(4,7,1)), object(16,size(5,3,1)),
              object(17,size(3,5,1)), object(18,size(1,1,1))],
            15).
+
+%% stack_data2
+% Run on data2.txt dataset
+stack_data2 :-
+    stack_n([object(1,size(4,4,1)), object(2,size(7,1,1)),
+             object(3,size(5,2,1)), object(4,size(8,1,1)),
+             object(5,size(6,5,1)), object(6,size(8,3,1)),
+             object(7,size(3,2,1)), object(8,size(1,10,1)),
+             object(9,size(4,4,1)), object(10,size(5,6,1)),
+             object(11,size(3,9,1)), object(12,size(2,1,1)),
+             object(13,size(7,4,1)), object(14,size(3,10,1)),
+             object(15,size(1,6,1))],
+            11).
+
+%% stack_data3
+% Run on data3.txt dataset
+stack_data3 :-
+    stack_n([object(1,size(2,3,1)), object(2,size(2,1,1)),
+             object(3,size(2,2,1)), object(4,size(1,3,1)),
+             object(5,size(3,2,1)), object(6,size(2,3,1)),
+             object(7,size(3,3,1)), object(8,size(2,3,1)),
+             object(9,size(3,1,1)), object(10,size(1,1,1)),
+             object(11,size(2,1,1)), object(12,size(1,2,1)),
+             object(13,size(3,1,1)), object(14,size(2,3,1)),
+             object(15,size(1,2,1)), object(16,size(1,2,1)),
+             object(17,size(3,1,1)), object(18,size(2,3,1)),
+             object(19,size(3,3,1)), object(20,size(3,3,1)),
+             object(21,size(2,1,1)), object(22,size(3,1,1)),
+             object(23,size(1,3,1)), object(24,size(2,1,1)),
+             object(25,size(1,1,1))],
+            25).
+
+%% stack_data4
+% Run on data4.txt dataset
+stack_data4 :-
+    stack_n([object(1,size(4,3,1)), object(2,size(2,2,1)),
+             object(3,size(1,4,1)), object(4,size(3,4,1)),
+             object(5,size(4,4,1)), object(6,size(1,4,1)),
+             object(7,size(1,5,1)), object(8,size(3,2,1)),
+             object(9,size(3,2,1)), object(10,size(1,3,1)),
+             object(11,size(1,5,1)), object(12,size(1,4,1)),
+             object(13,size(3,3,1)), object(14,size(1,5,1)),
+             object(15,size(3,2,1)), object(16,size(4,3,1)),
+             object(17,size(1,1,1)), object(18,size(2,4,1)),
+             object(19,size(2,2,1)), object(20,size(4,2,1)),
+             object(21,size(4,4,1)), object(22,size(4,4,1)),
+             object(23,size(5,3,1)), object(24,size(3,4,1)),
+             object(25,size(1,5,1)), object(26,size(1,2,1))],
+            23).
+
+%% stack_data5
+% Run on data5.txt dataset
+stack_data5 :-
+    stack_n([oject(1,size(3,9,1)), object(2,size(6,2,1)),
+             object(3,size(3,1,1)), object(4,size(8,4,1)),
+             object(5,size(4,5,1)), object(6,size(1,6,1))],
+            5).
+
