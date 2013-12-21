@@ -1,7 +1,9 @@
 %% TODO:
+%% Constraints
+%%   - Cannot put a heavier item on top of a lighter one
 %%
 %% Improve results:
-%%   - change the pick policy (eg. biggest first): it would probably
+%%   ✔ change the pick policy (eg. biggest first): it would probably
 %%   improve a bit the result, but is not very flexible
 %%   OR
 %%   - generate the tree and explore it in a best-first search way,
@@ -13,6 +15,10 @@
 %%  - Try 3D
 %%  - Improve output
 %%  - Generate an image for the visualization
+
+%% strategy(-Strategy)
+% Defines the strategy to use to compute the stackings.
+strategy(basic).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                     Container representation                             %%%
@@ -44,9 +50,23 @@ clear_containers :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                          Object representation                           %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-weight(object(_, size(W, H, D)), Weight) :-
-    % Weight is proportional to the volume of the object.
-    Weight is W*H*D.
+
+%% volume(+Object, -Volume)
+% Compute the volume of an object
+weight(object(_, size(W, H, D)), Volume) :-
+    Volume is W*H*D.
+
+%% weight(+Object, -Weight)
+% Compute the weight of an object (which is proportional to the volume)
+weight(Object, Weight) :-
+    volume(Object, Weight).
+
+%% heavier(-Pred, +Obj1, +Obj2)
+% Predicate to test if an object is heavier than another
+heavier(Pred, Obj1, Obj2) :-
+    weight(Obj1, N1),
+    weight(Obj2, N2),
+    compare(Pred, N1, N2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Display functions                             %%%
@@ -210,13 +230,13 @@ place(Container, Pos, Object) :-
 %%%                               Main loop                                  %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% pick_element(+List, -Element)
+%% pick(+List, -Element)
 % Pick an element from a list
 pick([H|_], H).
 pick([_|T], Element) :-
     pick(T, Element).
 
-%% pick_object(+List, -Element, -NewList)
+%% pick_and_remove(+List, -Element, -NewList)
 % Pick an element from a list and removes it
 pick_and_remove([H|T], T, H).
 pick_and_remove([H|T], [H|T1], Object) :-
@@ -240,17 +260,35 @@ possible_positions(Container, Object, Positions) :-
             InSquare),
     include(is_legal(Container, Object), InSquare, Positions).
 
-%% stack(+Objects, +Containers, -ObjectsAndPositions)
-% Not working properly yet
-stack(_, _, []).
-stack(Objects, Containers, [[Object, Container, Position]|Res]) :-
+%% stack_basic(+Objects, +Containers, -ObjectsAndPositions)
+% Stack some objects into the given containers. Try to stack the
+% elements of Objects in the given order
+stack_basic(_, _, []).
+stack_basic(Objects, Containers, [[Object, Container, Position]|Res]) :-
     pick(Containers, Container),
     pick_and_remove(Objects, NewObjects, Object),
     possible_positions(Container, Object, Positions),
     pick(Positions, Position),
     place(Container, Position, Object),
-    stack(NewObjects, Containers, Res).
+    stack_basic(NewObjects, Containers, Res).
 
+%% stack_heaviest_first(+Objects, +Containers, -ObjectsAndPositions)
+% Like stack_basic, but place the heaviest objects first
+stack_heaviest_first(Objects, Containers, ObjectsAndPositions) :-
+    predsort(heavier, Objects, SortedObjects),
+    stack_basic(SortedObjects, Containers, ObjectsAndPositions).
+
+%% stacking_strategy(+Strategy, -Stacking)
+% Find the stacking function to use, given a strategy
+stacking_strategy(basic, stack_basic).
+stacking_strategy(heaviest_first, stack_heaviest_first).
+
+%% stack(+Objects, +Containers, -ObjectsAndPositions)
+% Stack objects according to the strategy defined with strategy/1
+stack(Objects, Containers, ObjectsAndPositions) :-
+    strategy(Strategy),
+    stacking_strategy(Strategy, Stacking),
+    apply(Stacking, [Objects, Containers, ObjectsAndPositions]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                 Examples                                 %%%
