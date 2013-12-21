@@ -249,6 +249,8 @@ stack(Objects, Containers, [[Object, Container, Position]|Res]) :-
 stack_n(Data, N) :-
     clear_containers,
     length(L, N),
+    length(Data, N1),
+    N =< N1,
     stack(Data,
           [1, 2],
           L),
