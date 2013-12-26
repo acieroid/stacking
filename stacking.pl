@@ -12,10 +12,6 @@
 %%  - Improve output
 %%  - Generate an image for the visualization
 
-%% strategy(-Strategy)
-% Defines the strategy to use to compute the stackings.
-strategy(basic).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         World representation                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,11 +79,32 @@ put(world(Objects, Containers, PlacementLists),
 %%%                              Heuristics                                  %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% eval_max_objects(+World, -Score).
-% Evaluation function that maximizes the number of objects placed.
-eval_max_objects(world(_, _, PlacementLists), Score) :-
-    placement_lists_count(PlacementLists, Score).
+%% strategy(-Strategy)
+% Defines the strategy to use to compute the stackings.
+strategy(max_objects).
 
-%% TODO: eval_max_balance (balance objects between containers, by weight)
-%%       eval_max_weight (put most weight)
-%%       eval_min_space (minimal empty space)
+%% eval_strategy(+Strategy, +World, -Score)
+% Evaluate the score of a board with the given strategy
+eval_strategy(max_objects,
+              world(_, _, PlacementLists), Score) :-
+    % Maximize the number of objects placed
+    placement_lists_count(PlacementLists, Score).
+eval_strategy(max_balance, _, _) :-
+    % Maximize the balance between the containers, by weight
+    % TODO: not implemented yet
+    fail.
+eval_strategy(max_weight, _, _) :-
+    % Maximize the total weight placed
+    % TODO: not implemented yet
+    fail.
+eval_strategy(min_space, _, _) :-
+    % Minimize the free spaces
+    % TODO: not implemented yet
+    fail.
+
+%% eval(+World, -Score)
+% Evaluate the score of a board based on the strategy defined by
+% strategy/1 (only one strategy can be defined at a time).
+eval(World, Score) :-
+    strategy(Strategy), !, % only try the first strategy
+    eval_strategy(Strategy, World, Score)
