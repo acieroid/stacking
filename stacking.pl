@@ -1,16 +1,8 @@
-%% TODO:
-%% Constraints
-%%   - Cannot put a heavier item on top of a lighter one
-%%
-%% Improve results:
-%%   - generate the tree and explore it in a best-first search way,
-%%   which would be more flexible
-%%
-%% Extensions:
+%% Extensions to do:
 %%  - Rotate objects
 %%  - Try 3D
 %%  - Improve output
-%%  - Generate an image for the visualization
+%%  - Visualisation
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         World representation                             %%%
@@ -264,6 +256,25 @@ search([World|Rest], FinalWorld) :-
     add_best_first(Children, Rest, NewAgenda),
     search(NewAgenda, FinalWorld).
 
+%% best(+Initial, -Best)
+% Do a best-first search and find the best world, according to eval/2.
+% TODO: implement a predicate like findall that take the max of an
+% increasing sequence of computations.
+best(Initial, Best) :-
+    eval(Initial, InitialScore),
+    children(Initial, Children),
+    best(Children, Initial, InitialScore, Best).
+
+best([World|Rest], _CurrentBest, BestScore, Best) :-
+    eval(World, ThisScore),
+    ThisScore >= BestScore,
+    children(World, Children),
+    add_best_first(Children, Rest, NewAgenda),
+    best(NewAgenda, World, ThisScore, Best).
+best([World|_], Best, BestScore, Best) :-
+    eval(World, ThisScore),
+    ThisScore < BestScore.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Useful functions                              %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -373,10 +384,10 @@ simple_world(W) :-
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 8, 1, position(1, 1, 1), W).
 
-debug(Res) :-
-    objects(3, Objs),
+debug(Best) :-
+    objects(18, Objs),
     empty(Objs, [1, 2], EmptyWorld),
-    search([EmptyWorld], Res).
+    best(EmptyWorld, Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                               Unit tests                                 %%%
