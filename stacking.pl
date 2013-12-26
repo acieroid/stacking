@@ -21,6 +21,7 @@ run(Best) :-
     containers(Containers),
     empty(Objects, Containers, EmptyWorld),
     best(EmptyWorld, Best),
+    display_verbose(Best),
     display(Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -375,6 +376,28 @@ display(World) :-
     display_container(World, 1),
     write('Container 2:'), nl,
     display_container(World, 2).
+
+%% display_verbose(+World)
+% Verbosely display a world
+display_verbose(world(Objects, _, PlacementLists)) :-
+    write('Objects:'), nl,
+    display_list(Objects),
+    write('Placements:'), nl,
+    display_plists(PlacementLists).
+
+%% display_plists(+PlacementLists)
+% Verbosely display a placement list
+display_plists([]).
+display_plists([P|Ps]) :-
+    display_list(P), nl,
+    display_plists(Ps).
+
+%% display_list(+List)
+% Verbosely display a list
+display_list([]).
+display_list([H|T]) :-
+    write(H), nl,
+    display_list(T).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Useful functions                              %%%
