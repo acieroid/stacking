@@ -48,7 +48,7 @@ placement_lists_count([P|Ps], N) :-
 % Find the placement list for a container
 placement_list(world(_, Containers, PlacementLists), Container,
                PlacementList) :-
-    placement_list(Containers, PlacementLists, Container, PlacementList).
+    placement_list(PlacementLists, Containers, Container, PlacementList).
 
 placement_list([P|_], [Container|_], Container, P) :-
     !. % red cut, but doesn't cut any success branch for our use
@@ -160,6 +160,25 @@ is_valid(World, Container, Pos) :-
     is_inside(Container, Pos),
     is_free(World, Container, Pos).
 
+%% in_square(+BottomLeft, +TopRight, ?Position)
+% Bind Position to a position in the square described by BottomLeft
+% and TopRight. Can be used to check that Position is inside this
+% square too.
+in_square(position(X1, Y1, Z1), position(X2, Y2, Z2), position(X, Y, Z)) :-
+    between(X1, X2, X),
+    between(Y1, Y2, Y),
+    between(Z1, Z2, Z).
+
+%% bases(+Object, +Position, -Positions)
+% Bind Positions to the positions of the base of the object (its
+% bottom layer), given that it is place at Position
+bases(Object, position(X, Y, Z), Positions) :-
+    object(Object, size(Width, _, Depth)),
+    EndX is X+Width-1, EndZ is Z+Depth-1,
+    findall(Position,
+            in_square(position(X, Y, Z), position(EndX, Y, EndZ), Position),
+            Positions).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Best-First Search                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,7 +216,7 @@ search([World|Rest], FinalWorld) :-
     search(NewAgenda, FinalWorld).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                                    Test                                  %%%
+%%%                                   Debug                                  %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% data1.txt
@@ -228,10 +247,22 @@ objects(N, [N|Rest]) :-
     N1 is N-1,
     objects(N1, Rest).
 
-%% test
-% Some tests
-test :-
+%% simple_world(W)
+% Simple world for debugging purposes
+simple_world(W) :-
+    objects(18, Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    put(EmptyWorld, 8, 1, position(1, 1, 1), W).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                               Unit tests                                 %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+tests :-
+    test_valid_after_place.
+
+test_valid_after_place :-
     objects(18, Objs),
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 8, 1, position(1, 1, 1), NewWorld),
-    is_valid(NewWorld, 1, position(1, 1, 1)).
+    not(is_valid(NewWorld, 1, position(1, 1, 1))).
