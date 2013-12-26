@@ -314,11 +314,8 @@ object(18,size(1,1,1)).
 
 %% objects(+EndId, -Objects)
 % Generate objects identifiers from 1 to N
-objects(1, []) :- !. % green cut
-objects(N, [N|Rest]) :-
-    N > 0,
-    N1 is N-1,
-    objects(N1, Rest).
+objects(N, Objects) :-
+    findall(X, between(1, N, X), Objects).
 
 %% simple_world(W)
 % Simple world for debugging purposes
