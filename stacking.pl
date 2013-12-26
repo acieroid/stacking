@@ -327,6 +327,11 @@ simple_world(W) :-
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 8, 1, position(1, 1, 1), W).
 
+debug(Res) :-
+    objects(3, Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    search([EmptyWorld], Res).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                               Unit tests                                 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
