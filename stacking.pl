@@ -179,6 +179,36 @@ bases(Object, position(X, Y, Z), Positions) :-
             in_square(position(X, Y, Z), position(EndX, Y, EndZ), Position),
             Positions).
 
+%% has_base(+World, +Container, +Pos)
+% Verify if the position has something beneath it, to serve as a
+% base
+has_base(World, Container, position(X, Y, Z)) :-
+    Y > 1,
+    % a position has a base if the position beneath it is occupied
+    Y1 is Y-1,
+    is_occupied(World, Container, position(X, Y1, Z)).
+has_base(_, position(_, 1, _)). % the bottom of the container has a base
+
+%% is_legal(+Container, +Object, +Pos)
+% Check if it is legal to put an object at a given position in a
+% container
+is_legal(World, Container, Id, position(X, Y, Z)) :-
+    object(Id, size(Width, Height, Depth)),
+    EndX is X+Width-1, EndY is Y+Height-1, EndZ is Z+Depth-1,
+    % Find all the positions that the object will take
+    findall(Pos, in_square(position(X, Y, Z), position(EndX, EndY, EndZ), Pos),
+            Positions),
+    % Filter out the valid position to keep the invalid ones
+    exclude(is_valid(Container), Positions, Invalid),
+    length(Invalid, 0), % should not have invalid positions
+    length(Positions, N), % and at least a valid one
+    N > 0,
+    % Get the base positions of the object
+    bases(Id, position(X, Y, Z), BasePositions),
+    % Filter out the positions that have a base
+    exclude(has_base(World, Container), BasePositions, InvalidBases),
+    length(InvalidBases, 0). % should not have any invalid base
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Best-First Search                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
