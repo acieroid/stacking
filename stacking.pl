@@ -182,12 +182,12 @@ bases(Object, position(X, Y, Z), Positions) :-
 %% has_base(+World, +Container, +Pos)
 % Verify if the position has something beneath it, to serve as a
 % base
+has_base(_, _, position(_, 1, _)). % the bottom of the container has a base
 has_base(World, Container, position(X, Y, Z)) :-
     Y > 1,
     % a position has a base if the position beneath it is occupied
     Y1 is Y-1,
     is_occupied(World, Container, position(X, Y1, Z)).
-has_base(_, position(_, 1, _)). % the bottom of the container has a base
 
 %% is_legal(+Container, +Object, +Pos)
 % Check if it is legal to put an object at a given position in a
@@ -327,17 +327,46 @@ simple_world(W) :-
 debug(Res) :-
     objects(3, Objs),
     empty(Objs, [1, 2], EmptyWorld),
-    search([EmptyWorld], Res).
+    place_one(EmptyWorld, Res).
+    %children(EmptyWorld, Res).
+    %search([EmptyWorld], Res).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                               Unit tests                                 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tests :-
-    test_valid_after_place.
+    % tests done on data1.txt
+    test_valid_after_place,
+    test_legal,
+    test_is_occupied,
+    test_has_base.
 
 test_valid_after_place :-
     objects(18, Objs),
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 8, 1, position(1, 1, 1), NewWorld),
     not(is_valid(NewWorld, 1, position(1, 1, 1))).
+
+test_legal :-
+    objects(18, Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    is_legal(EmptyWorld, 1, 1, position(1, 1, 1)).
+
+test_is_occupied :-
+    objects(18, Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    put(EmptyWorld, 1, 1, position(1, 1, 1), NewWorld),
+    is_occupied(NewWorld, 1, position(3, 1, 1)),
+    not(is_occupied(NewWorld, 1, position(3, 2, 1))).
+
+test_has_base :-
+    objects(18, Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    put(EmptyWorld, 1, 1, position(1, 1, 1), NewWorld),
+    has_base(EmptyWorld, 1, position(1, 1, 1)),
+    has_base(EmptyWorld, 1, position(2, 1, 1)),
+    has_base(EmptyWorld, 1, position(5, 1, 1)),
+    not(has_base(EmptyWorld, 1, position(5, 5, 1))),
+    has_base(NewWorld, 1, position(3, 2, 1)),
+    not(has_base(NewWorld, 1, position(3, 3, 1))).
