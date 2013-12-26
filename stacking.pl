@@ -73,7 +73,6 @@ put(world(Objects, Containers, PlacementLists),
     delete(Objects, Object, NewObjects),
     place(PlacementLists, Containers, Container,
           Object at Position, NewPlacementLists).
-    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                              Heuristics                                  %%%
@@ -107,4 +106,44 @@ eval_strategy(min_space, _, _) :-
 % strategy/1 (only one strategy can be defined at a time).
 eval(World, Score) :-
     strategy(Strategy), !, % only try the first strategy
-    eval_strategy(Strategy, World, Score)
+    eval_strategy(Strategy, World, Score).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                             Object Placement                             %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                            Best-First Search                             %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% predmerge(+Pred, +List1, +List2, -List3)
+% Same as merge/3 but with a predicate
+% Taken from http://web.mit.edu/course/6/6.863/src/pl-5.6.54/library/sort.pl
+predmerge(_, [], R, R) :- !.
+predmerge(_, R, [], R) :- !.
+predmerge(P, [H1|T1], [H2|T2], Result) :-
+	call(P, Delta, H1, H2),
+	predmerge(Delta, P, H1, H2, T1, T2, Result).
+
+predmerge(>, P, H1, H2, T1, T2, [H2|R]) :-
+	predmerge(P, [H1|T1], T2, R).
+predmerge(=, P, H1, _, T1, T2, [H1|R]) :-
+	predmerge(P, T1, T2, R).
+predmerge(<, P, H1, H2, T1, T2, [H1|R]) :-
+	predmerge(P, T1, [H2|T2], R).
+
+%% add_best_first(+Children, +Agenda, -NewAgenda)
+% Merge new childrens in agenda
+add_best_first(Children, Agenda, NewAgenda) :-
+    predsort(compare_world, Children, SortedChildren),
+    predmerge(compare_world, SortedChildren, Agenda, NewAgenda).
+
+%% search(+Agenda, -FinalWorld)
+% Do a best-first search on the search space. Taken from Simply
+% Logical, chapter 6.
+search([World|_], World) :-
+    filled(World).
+search([World|Rest], FinalWorld) :-
+    children(World, Children),
+    add_best_first(Children, Rest, NewAgenda),
+    search(NewAgenda, FinalWorld).
