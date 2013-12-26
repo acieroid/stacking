@@ -192,26 +192,85 @@ has_base(_, position(_, 1, _)). % the bottom of the container has a base
 %% is_legal(+Container, +Object, +Pos)
 % Check if it is legal to put an object at a given position in a
 % container
-is_legal(World, Container, Id, position(X, Y, Z)) :-
-    object(Id, size(Width, Height, Depth)),
+is_legal(World, Container, Object, position(X, Y, Z)) :-
+    object(Object, size(Width, Height, Depth)),
     EndX is X+Width-1, EndY is Y+Height-1, EndZ is Z+Depth-1,
     % Find all the positions that the object will take
     findall(Pos, in_square(position(X, Y, Z), position(EndX, EndY, EndZ), Pos),
             Positions),
     % Filter out the valid position to keep the invalid ones
-    exclude(is_valid(Container), Positions, Invalid),
+    exclude(is_valid(World, Container), Positions, Invalid),
     length(Invalid, 0), % should not have invalid positions
     length(Positions, N), % and at least a valid one
     N > 0,
     % Get the base positions of the object
-    bases(Id, position(X, Y, Z), BasePositions),
+    bases(Object, position(X, Y, Z), BasePositions),
     % Filter out the positions that have a base
     exclude(has_base(World, Container), BasePositions, InvalidBases),
     length(InvalidBases, 0). % should not have any invalid base
 
+%% possible_positions(+World, +Container, +Object, -Positions)
+% Bind Positions to all the possible (legal) positions that can take
+% Object in Container.
+possible_positions(World, Container, Object, Positions) :-
+    container_size(Container, size(Width, Height, Depth)),
+    % TODO: this kind of findall followed by include/exclude can
+    % probably be factored in only one findall
+    findall(Pos,
+            in_square(position(1, 1, 1), position(Width, Height, Depth), Pos),
+            InSquare),
+    include(is_legal(World, Container, Object), InSquare, Positions).
+
+%% place_one(+World, -NewWorld)
+% Nondeterministically pick an object and put it in some position of a
+% container
+place_one(World, NewWorld) :-
+    World = world(Objects, Containers, _),
+    pick(Containers, Container),
+    pick(Objects, Object),
+    possible_positions(World, Container, Object, Positions),
+    pick(Positions, Position),
+    put(World, Object, Container, Position, NewWorld).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Best-First Search                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% children(+World, -Children)
+% Compute the children of a world
+children(World, Children) :-
+    findall(W, place_one(World, W), Children).
+
+%% add_best_first(+Children, +Agenda, -NewAgenda)
+% Merge new childrens in agenda
+add_best_first(Children, Agenda, NewAgenda) :-
+    predsort(compare_world, Children, SortedChildren),
+    predmerge(compare_world, SortedChildren, Agenda, NewAgenda).
+
+%% search(+Agenda, -FinalWorld)
+% Do a best-first search on the search space. Taken from Simply
+% Logical, chapter 6.
+search([World|_], World). % no specific condition to stop (yet)
+search([World|Rest], FinalWorld) :-
+    children(World, Children),
+    add_best_first(Children, Rest, NewAgenda),
+    search(NewAgenda, FinalWorld).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                            Useful functions                              %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% pick(+List, -Element)
+% Pick an element from a list
+pick([H|_], H).
+pick([_|T], Element) :-
+    pick(T, Element).
+
+%% pick_and_remove(+List, -Element, -NewList)
+% Pick an element from a list and removes it
+pick_and_remove([H|T], T, H).
+pick_and_remove([H|T], [H|T1], Object) :-
+    pick_and_remove(T, T1, Object).
 
 %% predmerge(+Pred, +List1, +List2, -List3)
 % Same as merge/3 but with a predicate
@@ -228,22 +287,6 @@ predmerge(=, P, H1, _, T1, T2, [H1|R]) :-
 	predmerge(P, T1, T2, R).
 predmerge(<, P, H1, H2, T1, T2, [H1|R]) :-
 	predmerge(P, T1, [H2|T2], R).
-
-%% add_best_first(+Children, +Agenda, -NewAgenda)
-% Merge new childrens in agenda
-add_best_first(Children, Agenda, NewAgenda) :-
-    predsort(compare_world, Children, SortedChildren),
-    predmerge(compare_world, SortedChildren, Agenda, NewAgenda).
-
-%% search(+Agenda, -FinalWorld)
-% Do a best-first search on the search space. Taken from Simply
-% Logical, chapter 6.
-search([World|_], World) :-
-    filled(World).
-search([World|Rest], FinalWorld) :-
-    children(World, Children),
-    add_best_first(Children, Rest, NewAgenda),
-    search(NewAgenda, FinalWorld).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                   Debug                                  %%%
