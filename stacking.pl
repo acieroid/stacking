@@ -182,7 +182,8 @@ bases(Object, position(X, Y, Z), Positions) :-
 %% has_base(+World, +Container, +Pos)
 % Verify if the position has something beneath it, to serve as a
 % base
-has_base(_, _, position(_, 1, _)). % the bottom of the container has a base
+has_base(_, _, position(_, 1, _)) :-  % the bottom of the container has a base
+  !. % might cut some success branch, but not when used correctly
 has_base(World, Container, position(X, Y, Z)) :-
     Y > 1,
     % a position has a base if the position beneath it is occupied
