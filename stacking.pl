@@ -40,6 +40,14 @@ placement_lists([], []).
 placement_lists([_|Containers], [[]|Rest]) :-
     placement_lists(Containers, Rest).
 
+%% placement_lists_count(+PlacementLists, -Count)
+% Count the number of objects inside all the containers
+placement_lists_count([], 0).
+placement_lists_count([P|Ps], N) :-
+    length(P, N1),
+    placement_lists_count(Ps, N2),
+    N is N1 + N2.
+
 %% place(+PlacementLists, +Containers, +Container, +Content, -NewPlacementLists)
 % Place an object in a container, updating the given placement
 % lists. No checks are done.
@@ -70,3 +78,16 @@ put(world(Objects, Containers, PlacementLists),
     place(PlacementLists, Containers, Container,
           Object at Position, NewPlacementLists).
     
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                              Heuristics                                  %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% eval_max_objects(+World, -Score).
+% Evaluation function that maximizes the number of objects placed.
+eval_max_objects(world(_, _, PlacementLists), Score) :-
+    placement_lists_count(PlacementLists, Score).
+
+%% TODO: eval_max_balance (balance objects between containers, by weight)
+%%       eval_max_weight (put most weight)
+%%       eval_min_space (minimal empty space)
