@@ -13,14 +13,15 @@
 %%%                             Main predicate                               %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% run(-Best)
-% Do a best-first search on the dataset currently loaded, Best is
-% bound to the best configuration found, according to eval/2.
+%% run
+% Do a best-first search on the dataset currently loaded and display
+% the best the best configuration found, according to eval/2.
 run(Best) :-
     objects(Objects),
     containers(Containers),
     empty(Objects, Containers, EmptyWorld),
-    best(EmptyWorld, Best).
+    best(EmptyWorld, Best),
+    display(Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         World representation                             %%%
@@ -304,6 +305,76 @@ best([World|Rest], _CurrentBest, BestScore, Best) :-
 best([World|_], Best, BestScore, Best) :-
     eval(World, ThisScore),
     ThisScore < BestScore.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                            Display functions                             %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% display_line(+Size)
+% Display a line of underscores of size Size
+display_line(0) :- !.
+display_line(N) :-
+    N > 0,
+    N1 is N-1,
+    write('_'),
+    display_line(N1).
+
+%% display_container(+Container)
+% Nicely displays a container, one level of depth at a time (Z=1, then
+% Z=2, etc.)
+display_container(World, Container) :-
+    container_size(Container, size(W, H, D)),
+    % red cut, since it could cut branches if multiple sizes are
+    % defined for the same container, but since it should not be the
+    % case, that's fine
+    write('|'),
+    display_container(World, Container, position(1, H, 1), size(W, H, D)),
+    nl, nl.
+
+display_container(World, Container, position(W, 1, D), size(W, _, D)) :-
+    display_pos(World, Container, position(W, 1, D)),
+    write('|'), nl,
+    W2 is W*2-1,
+    write('+'), display_line(W2), write('+'), nl, !.
+display_container(World, Container, position(W, 1, Z), size(W, H, D)) :-
+    display_pos(World, Container, position(W, 1, Z)),
+    write('|'), nl,
+    W2 is W*2-1,
+    write('+'), display_line(W2), write('+'),
+    nl, nl,
+    Z1 is Z+1,
+    display_container(World, Container, position(1, H, Z1), size(W, H, D)), !.
+display_container(World, Container, position(W, Y, Z), size(W, H, D)) :-
+    display_pos(World, Container, position(W, Y, Z)),
+    write('|'), nl, write('|'),
+    Y1 is Y-1,
+    display_container(World, Container, position(1, Y1, Z), size(W, H, D)), !.
+display_container(World, Container, position(X, Y, Z), size(W, H, D)) :-
+    X =< W, Y =< H, Z =< D,
+    display_pos(World, Container, position(X, Y, Z)),
+    tab(1),
+    X1 is X+1,
+    display_container(World, Container, position(X1, Y, Z), size(W, H, D)), !.
+
+%% display_pos(+Container, +Pos)
+% Display what is contained at the given position in the given container
+display_pos(World, Container, position(X, Y, Z)) :-
+    % red cut, since if a position is occupied multiple times it will
+    % cut successful branches, but it should never be the case
+    occupied_by(World, Container, position(X, Y, Z), Id), !,
+    write(Id).
+display_pos(_, _, _) :-
+    write(' ').
+
+%% display(+World)
+% Display all the containers of this world
+% TODO: don't depend on the fact that there is two containers
+display(World) :-
+    write('Container 1:'), nl,
+    display_container(World, 1),
+    write('Container 2:'), nl,
+    display_container(World, 2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Useful functions                              %%%
