@@ -44,10 +44,22 @@ placement_lists_count([P|Ps], N) :-
     placement_lists_count(Ps, N2),
     N is N1 + N2.
 
+%% placement_list(+World, +Container, -PlacementList)
+% Find the placement list for a container
+placement_list(world(_, Containers, PlacementLists), Container,
+               PlacementList) :-
+    placement_list(Containers, PlacementLists, Container, PlacementList).
+
+placement_list([P|_], [Container|_], Container, P) :-
+    !. % red cut, but doesn't cut any success branch for our use
+placement_list([_|Ps], [_|Containers], Container, P) :-
+    placement_list(Ps, Containers, Container, P).
+
 %% place(+PlacementLists, +Containers, +Container, +Content, -NewPlacementLists)
 % Place an object in a container, updating the given placement
 % lists. No checks are done.
-place([P|Ps], [Container|_], Container, Content, [[Content|P]|Ps]) :- !.
+place([P|Ps], [Container|_], Container, Content, [[Content|P]|Ps]) :-
+    !. % red cut, but doesn't cut any success branch for our use
 place([P|Ps], [_|Containers], Container, Content, [P|NewPs]) :-
     place(Ps, Containers, Container, Content, NewPs).
 
@@ -112,6 +124,42 @@ eval(World, Score) :-
 %%%                             Object Placement                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% is_inside(+Container, +Pos)
+% Verify if a position is correctly inside a container.
+is_inside(Container, position(X, Y, Z)) :-
+    container_size(Container, size(Width, Height, Depth)),
+    between(1, Width, X),
+    between(1, Height, Y),
+    between(1, Depth, Z).
+
+%% occupied_by(+Container, +Pos, -Id)
+% Return the object that occupies a certain position in a
+% container. Fail if no object occupies this position.
+occupied_by(World, Container, position(X, Y, Z), Id) :-
+    placement_list(World, Container, PlacementList),
+    member(Id at position(StartX, StartY, StartZ), PlacementList),
+    object(Id, size(Width, Height, Depth)),
+    EndX is StartX+Width-1, EndY is StartY+Height-Y, EndZ is StartZ+Depth-1,
+    between(StartX, EndX, X),
+    between(StartY, EndY, Y),
+    between(StartZ, EndZ, Z).
+
+%% is_occupied(+World, +Container, +Pos)
+% Verify if a position of a container is occupied
+is_occupied(World, Container, Pos) :-
+    occupied_by(World, Container, Pos, _).
+
+%% is_free(+World, +Container, +Pos)
+% Verify if a position of a container is free
+is_free(World, Container, Pos) :-
+    not(is_occupied(World, Container, Pos)).
+
+%% is_valid(+World, +Container, +Pos)
+% Verify if a position can be occupied by a new object
+is_valid(World, Container, Pos) :-
+    is_inside(Container, Pos),
+    is_free(World, Container, Pos).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Best-First Search                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -147,3 +195,43 @@ search([World|Rest], FinalWorld) :-
     children(World, Children),
     add_best_first(Children, Rest, NewAgenda),
     search(NewAgenda, FinalWorld).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                    Test                                  %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% data1.txt
+object(1,size(5,1,1)).
+object(2,size(5,7,1)).
+object(3,size(2,1,1)).
+object(4,size(1,1,1)).
+object(5,size(3,2,1)).
+object(6,size(5,1,1)).
+object(7,size(1,5,1)).
+object(8,size(4,3,1)).
+object(9,size(4,7,1)).
+object(10,size(4,2,1)).
+object(11,size(1,6,1)).
+object(12,size(2,4,1)).
+object(13,size(7,4,1)).
+object(14,size(6,7,1)).
+object(15,size(4,7,1)).
+object(16,size(5,3,1)).
+object(17,size(3,5,1)).
+object(18,size(1,1,1)).
+
+%% objects(+EndId, -Objects)
+% Generate objects identifiers from 1 to N
+objects(1, []) :- !. % green cut
+objects(N, [N|Rest]) :-
+    N > 0,
+    N1 is N-1,
+    objects(N1, Rest).
+
+%% test
+% Some tests
+test :-
+    objects(18, Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    put(EmptyWorld, 8, 1, position(1, 1, 1), NewWorld),
+    is_valid(NewWorld, 1, position(1, 1, 1)).
