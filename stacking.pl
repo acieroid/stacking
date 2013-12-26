@@ -4,9 +4,34 @@
 %%  - Improve output
 %%  - Visualisation
 
+%% Example run:
+%% ?- [data1].
+%% ?- [stacking].
+%% ?- run(Best)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                             Main predicate                               %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% run(-Best)
+% Do a best-first search on the dataset currently loaded, Best is
+% bound to the best configuration found, according to eval/2.
+run(Best) :-
+    objects(Objects),
+    containers(Containers),
+    empty(Objects, Containers, EmptyWorld),
+    best(EmptyWorld, Best).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         World representation                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% For object representation, see the data*.pl files. Objects Ids
+% should start from 1 and increase 1 by 1.
+
+%% objects(-Objects)
+% Find all the objects
+objects(Objects) :-
+    findall(Obj, object(Obj, _), Objects).
 
 %% X at Y
 % Operator used to identify position of objects
@@ -17,6 +42,11 @@
 % the original assignment)
 container_size(1, size(10, 10, 1)).
 container_size(2, size(10, 10, 1)).
+
+%% containers(-Containers)
+% Return the list of existing containers
+containers(Containers) :-
+    findall(C, container_size(C, _), Containers).
 
 %% placement_lists(+Containers, -PlacementLists)
 % Generate the placement lists. There is one placement list per
@@ -280,13 +310,13 @@ best([World|_], Best, BestScore, Best) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% pick(+List, -Element)
-% Pick an element from a list
+% Nondeterministically pick an element from a list
 pick([H|_], H).
 pick([_|T], Element) :-
     pick(T, Element).
 
 %% pick_and_remove(+List, -Element, -NewList)
-% Pick an element from a list and removes it
+% Nondeterministically pick an element from a list and removes it
 pick_and_remove([H|T], T, H).
 pick_and_remove([H|T], [H|T1], Object) :-
     pick_and_remove(T, T1, Object).
@@ -349,47 +379,6 @@ predmmerge(<, P, H1, H2, T1, T2, [H1|R]) :-
     predmmerge(P, T1, [H2|T2], R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                                   Debug                                  %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% data1.txt
-object(1,size(5,1,1)).
-object(2,size(5,7,1)).
-object(3,size(2,1,1)).
-object(4,size(1,1,1)).
-object(5,size(3,2,1)).
-object(6,size(5,1,1)).
-object(7,size(1,5,1)).
-object(8,size(4,3,1)).
-object(9,size(4,7,1)).
-object(10,size(4,2,1)).
-object(11,size(1,6,1)).
-object(12,size(2,4,1)).
-object(13,size(7,4,1)).
-object(14,size(6,7,1)).
-object(15,size(4,7,1)).
-object(16,size(5,3,1)).
-object(17,size(3,5,1)).
-object(18,size(1,1,1)).
-
-%% objects(+EndId, -Objects)
-% Generate objects identifiers from 1 to N
-objects(N, Objects) :-
-    findall(X, between(1, N, X), Objects).
-
-%% simple_world(W)
-% Simple world for debugging purposes
-simple_world(W) :-
-    objects(18, Objs),
-    empty(Objs, [1, 2], EmptyWorld),
-    put(EmptyWorld, 8, 1, position(1, 1, 1), W).
-
-debug(Best) :-
-    objects(18, Objs),
-    empty(Objs, [1, 2], EmptyWorld),
-    best(EmptyWorld, Best).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                               Unit tests                                 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -401,25 +390,25 @@ tests :-
     test_has_base.
 
 test_valid_after_place :-
-    objects(18, Objs),
+    objects(Objs),
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 8, 1, position(1, 1, 1), NewWorld),
     not(is_valid(NewWorld, 1, position(1, 1, 1))).
 
 test_legal :-
-    objects(18, Objs),
+    objects(Objs),
     empty(Objs, [1, 2], EmptyWorld),
     is_legal(EmptyWorld, 1, 1, position(1, 1, 1)).
 
 test_is_occupied :-
-    objects(18, Objs),
+    objects(Objs),
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 1, 1, position(1, 1, 1), NewWorld),
     is_occupied(NewWorld, 1, position(3, 1, 1)),
     not(is_occupied(NewWorld, 1, position(3, 2, 1))).
 
 test_has_base :-
-    objects(18, Objs),
+    objects(Objs),
     empty(Objs, [1, 2], EmptyWorld),
     put(EmptyWorld, 1, 1, position(1, 1, 1), NewWorld),
     has_base(EmptyWorld, 1, position(1, 1, 1)),
