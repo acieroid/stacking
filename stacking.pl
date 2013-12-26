@@ -20,6 +20,10 @@ strategy(basic).
 %%%                         World representation                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% X at Y
+% Operator used to identify position of objects
+:- op(500, xfx, at).
+
 %% container_size(+Container, -Size)
 % Specifies the size of the container (10x10x1 for each container in
 % the original assignment)
@@ -31,7 +35,7 @@ container_size(2, size(10, 10, 1)).
 % container. Each placement list contains the list of objects that
 % have been placed inside the corresponding container, along with the
 % position. For example, if Containers = [1, 2], the placement lists
-% could be [[at(1, pos(1,1,1))] []].
+% could be [[1 at pos(1,1,1)] []].
 placement_lists([], []).
 placement_lists([_|Containers], [[]|Rest]) :-
     placement_lists(Containers, Rest).
@@ -64,5 +68,5 @@ put(world(Objects, Containers, PlacementLists),
     world(NewObjects, Containers, NewPlacementLists)) :-
     delete(Objects, Object, NewObjects),
     place(PlacementLists, Containers, Container,
-          at(Object, Position), NewPlacementLists).
+          Object at Position, NewPlacementLists).
     
