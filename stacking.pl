@@ -1,6 +1,6 @@
 %% Things to do:
 %%  - no bigger objects on smaller ones
-%%  - check nondeterminism of run/1
+%%  - see TODOs in the code
 %% Possible extensions:
 %%  - Rotate objects
 %%  - Try 3D
