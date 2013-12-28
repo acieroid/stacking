@@ -1,4 +1,7 @@
-%% Extensions to do:
+%% Things to do:
+%%  - no bigger objects on smaller ones
+%%  - check nondeterminism of run/1
+%% Possible extensions:
 %%  - Rotate objects
 %%  - Try 3D
 %%  - Improve output
