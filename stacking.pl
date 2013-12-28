@@ -1,6 +1,10 @@
 %% Things to do:
 %%  - no bigger objects on smaller ones
 %%  - see TODOs in the code
+%%  - with data1 and max_objects, best finds worlds with score of 15 and
+%%    other of 14 (it should only find the 15 ones)
+%%  - nondeterminism: on debug, only the solutions where the second object
+%%    move are found, but the first one can also move
 %% Possible extensions:
 %%  - Rotate objects
 %%  - Try 3D
@@ -159,7 +163,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(max_weight).
+strategy(max_objects).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
