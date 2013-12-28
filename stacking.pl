@@ -38,6 +38,18 @@ run(Best) :-
 objects(Objects) :-
     findall(Obj, object(Obj, _), Objects).
 
+%% volume(+Object, -Volume)
+% Compute the volume of an object
+volume(Id, Volume) :-
+    object(Id, size(W, H, D)),
+    Volume is W * H * D.
+
+%% weight(+Object, -Weight)
+% Compute the weight of an object
+weight(Object, Weight) :-
+    % weight is proportional to volume
+    volume(Object, Weight).
+
 %% X at Y
 % Operator used to identify position of objects
 :- op(500, xfx, at).
@@ -63,13 +75,34 @@ placement_lists([], []).
 placement_lists([_|Containers], [[]|Rest]) :-
     placement_lists(Containers, Rest).
 
+%% placement_list_count(+PlacementList, -Count)
+% Count the number of objects inside a container
+placement_list_count(P, N) :-
+    length(P, N).
+
+%% placement_list_weight(+PlacementList, -Weight)
+% Measure the total weight inside a placement list
+placement_list_weight([], 0).
+placement_list_weight([Id at _|Rest], Weight) :-
+    weight(Id, Weight1),
+    placement_list_weight(Rest, Weight2),
+    Weight is Weight1 + Weight2.
+
 %% placement_lists_count(+PlacementLists, -Count)
 % Count the number of objects inside all the containers
 placement_lists_count([], 0).
 placement_lists_count([P|Ps], N) :-
-    length(P, N1),
+    placement_list_count(P, N1),
     placement_lists_count(Ps, N2),
     N is N1 + N2.
+
+%% placement_lists_weight(+PlacementList, -Weight)
+% Count the total weight put inside all containers
+placement_lists_weight([], 0).
+placement_lists_weight([P|Ps], Weight) :-
+    placement_list_weight(P, Weight1),
+    placement_lists_weight(Ps, Weight2),
+    Weight is Weight1 + Weight2.
 
 %% placement_list(+World, +Container, -PlacementList)
 % Find the placement list for a container
@@ -126,7 +159,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(max_objects).
+strategy(max_weight).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -138,10 +171,10 @@ eval_strategy(max_balance, _, _) :-
     % Maximize the balance between the containers, by weight
     % TODO: not implemented yet
     fail.
-eval_strategy(max_weight, _, _) :-
+eval_strategy(max_weight,
+              world(_, _, PlacementLists), Score) :-
     % Maximize the total weight placed
-    % TODO: not implemented yet
-    fail.
+    placement_lists_weight(PlacementLists, Score).
 eval_strategy(min_space, _, _) :-
     % Minimize the free spaces
     % TODO: not implemented yet
@@ -488,7 +521,8 @@ tests :-
     test_valid_after_place,
     test_legal,
     test_is_occupied,
-    test_has_base.
+    test_has_base,
+    test_score.
 
 test_valid_after_place :-
     objects(Objs),
@@ -518,3 +552,14 @@ test_has_base :-
     not(has_base(EmptyWorld, 1, position(5, 5, 1))),
     has_base(NewWorld, 1, position(3, 2, 1)),
     not(has_base(NewWorld, 1, position(3, 3, 1))).
+
+test_score :-
+    objects(Objs),
+    empty(Objs, [1, 2], EmptyWorld),
+    put(EmptyWorld, 1, 1, position(1, 1, 1), W1),
+    put(W1, 2, 2, position(1, 1, 1), W2),
+    eval(EmptyWorld, Score0),
+    eval(W1, Score1),
+    eval(W2, Score2),
+    Score0 =< Score1,
+    Score1 =< Score2.
