@@ -151,11 +151,12 @@ put(world(Objects, Containers, PlacementLists),
           Object at Position, NewPlacementLists).
 
 %% compare_worlds(?Order, +World1, +World2)
-% Compare two world using eval
+% Compare two world using eval, in the reverse order (a smaller world
+% is better, has a higher score), to be easier to use with sort
 compare_worlds(Order, World1, World2) :-
     eval(World1, Score1),
     eval(World2, Score2),
-    compare(Order, Score2, Score1). % smaller is better
+    compare(Order, Score2, Score1).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                              Heuristics                                  %%%
@@ -163,7 +164,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(max_objects).
+strategy(max_balance).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -171,10 +172,19 @@ eval_strategy(max_objects,
               world(_, _, PlacementLists), Score) :-
     % Maximize the number of objects placed
     placement_lists_count(PlacementLists, Score).
-eval_strategy(max_balance, _, _) :-
+eval_strategy(max_balance,
+              world(_, _, PlacementLists), Score) :-
     % Maximize the balance between the containers, by weight
-    % TODO: not implemented yet
-    fail.
+    placement_lists_weight(PlacementLists, TotalWeight),
+    length(PlacementLists, N),
+    AverageWeight is TotalWeight / N,
+    findall(Diff,
+            (member(P, PlacementLists),
+             placement_list_weight(P, W),
+             Diff is abs(AverageWeight - W)),
+            Diffs),
+    sum_list(Diffs, WeightDiff),
+    Score is TotalWeight - WeightDiff.
 eval_strategy(max_weight,
               world(_, _, PlacementLists), Score) :-
     % Maximize the total weight placed
