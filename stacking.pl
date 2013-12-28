@@ -383,11 +383,14 @@ display(World) :-
 
 %% display_verbose(+World)
 % Verbosely display a world
-display_verbose(world(Objects, _, PlacementLists)) :-
-    write('Objects:'), nl,
+display_verbose(world(Objects, Containers, PlacementLists)) :-
+    write('Remaining objects:'), nl,
     display_list(Objects),
     write('Placements:'), nl,
-    display_plists(PlacementLists).
+    display_plists(PlacementLists),
+    write('Score: '),
+    eval(world(Objects, Containers, PlacementLists), Score),
+    write(Score), nl, nl.
 
 %% display_plists(+PlacementLists)
 % Verbosely display a placement list
