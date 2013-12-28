@@ -301,6 +301,7 @@ best(Initial, Best) :-
     children(Initial, Children),
     best(Children, Initial, InitialScore, Best).
 
+best([], Best, _, Best).
 best([World|Rest], _CurrentBest, BestScore, Best) :-
     eval(World, ThisScore),
     ThisScore >= BestScore,
