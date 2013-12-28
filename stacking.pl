@@ -310,8 +310,7 @@ best([World|Rest], _CurrentBest, BestScore, Best) :-
     best(NewAgenda, World, ThisScore, Best).
 best([World|_], Best, BestScore, Best) :-
     eval(World, ThisScore),
-    ThisScore < BestScore.
-
+    ThisScore =< BestScore.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Display functions                             %%%
