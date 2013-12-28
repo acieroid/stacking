@@ -170,10 +170,11 @@ occupied_by(World, Container, position(X, Y, Z), Id) :-
     placement_list(World, Container, PlacementList),
     member(Id at position(StartX, StartY, StartZ), PlacementList),
     object(Id, size(Width, Height, Depth)),
-    EndX is StartX+Width-1, EndY is StartY+Height-Y, EndZ is StartZ+Depth-1,
+    EndX is StartX+Width-1, EndY is StartY+Height-1, EndZ is StartZ+Depth-1,
     between(StartX, EndX, X),
     between(StartY, EndY, Y),
-    between(StartZ, EndZ, Z).
+    between(StartZ, EndZ, Z),
+    !. % red cut, but it's fine since two objects cannot occupy the same spot
 
 %% is_occupied(+World, +Container, +Pos)
 % Verify if a position of a container is occupied
