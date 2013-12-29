@@ -3,7 +3,7 @@
 %%  - see TODOs in the code
 %% Possible extensions:
 %%  - Rotate objects
-%%  - Try 3D
+%%  v Try 3D
 %%  v Improve output
 %%  v Need a base
 
@@ -411,7 +411,7 @@ display_container(World, Container, position(W, 1, Z), size(W, H, D)) :-
     W2 is W*3-1,
     write('+'), display_line(W2), write('+'),
     nl, nl,
-    Z1 is Z+1,
+    Z1 is Z+1, write('|'),
     display_container(World, Container, position(1, H, Z1), size(W, H, D)), !.
 display_container(World, Container, position(W, Y, Z), size(W, H, D)) :-
     display_pos(World, Container, position(W, Y, Z)),
