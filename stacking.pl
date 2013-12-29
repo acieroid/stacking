@@ -1,10 +1,6 @@
 %% Things to do:
 %%  - no bigger objects on smaller ones
 %%  - see TODOs in the code
-%%  - with data1 and max_objects, best finds worlds with score of 15 and
-%%    other of 14 (it should only find the 15 ones)
-%%  - nondeterminism: on debug, only the solutions where the second object
-%%    move are found, but the first one can also move
 %% Possible extensions:
 %%  - Rotate objects
 %%  - Try 3D
@@ -14,21 +10,33 @@
 %% Example run:
 %% ?- [data1].
 %% ?- [stacking].
-%% ?- run(Best)
+%% ?- run(Best, 15)
+%% OR
+%% ?- best(Best)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                             Main predicate                               %%%
+%%%                             Main predicates                              %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% run
 % Do a best-first search on the dataset currently loaded and display
-% the best the best configuration found, according to eval/2.
-run(Best) :-
+% configurations found that have their score greater than MinimalScore.
+run(Best, MinimalScore) :-
     objects(Objects),
     containers(Containers),
     empty(Objects, Containers, EmptyWorld),
-    best(EmptyWorld, Best),
-    display_verbose(Best),
+    search([EmptyWorld], MinimalScore, Best),
+    display(Best).
+
+%% best
+% Try to find the best configurations, according to eval/2. Migth take
+% a long time to terminate if the state space is big
+best(Best) :-
+    objects(Objects),
+    containers(Containers),
+    empty(Objects, Containers, EmptyWorld),
+    eval(EmptyWorld, EmptyScore),
+    search_best([EmptyWorld], EmptyScore, [EmptyWorld], Best),
     display(Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -330,34 +338,36 @@ add_best_first(Children, Agenda, NewAgenda) :-
     predmsort(compare_worlds, Children, SortedChildren),
     predmmerge(compare_worlds, SortedChildren, Agenda, NewAgenda).
 
-%% search(+Agenda, -FinalWorld)
-% Do a best-first search on the search space. Taken from Simply
+%% search(+Agenda, +ScoreWanted, -FinalWorld)
+% Do a best-first search on the search space, accepting all results
+% that have a score higher than ScoreWanted. Taken from Simply
 % Logical, chapter 6.
-search([World|_], World). % no specific condition to stop (yet)
-search([World|Rest], FinalWorld) :-
+search([World|_], ScoreWanted, World) :-
+    eval(World, Score),
+    Score >= ScoreWanted.
+search([World|Rest], ScoreWanted, FinalWorld) :-
     children(World, Children),
     add_best_first(Children, Rest, NewAgenda),
-    search(NewAgenda, FinalWorld).
+    search(NewAgenda, ScoreWanted, FinalWorld).
 
-%% best(+Initial, -Best)
-% Do a best-first search and find the best world, according to eval/2.
-% TODO: implement a predicate like findall that take the max of an
-% increasing sequence of computations.
-best(Initial, Best) :-
-    eval(Initial, InitialScore),
-    children(Initial, Children),
-    best(Children, Initial, InitialScore, Best).
 
-best([], Best, _, Best).
-best([World|Rest], _CurrentBest, BestScore, Best) :-
-    eval(World, ThisScore),
-    ThisScore >= BestScore,
+%% search_best(+Agenda, +MaxScore, +CurrentBests, -Best)
+% Find one of the worlds with the highest score. Might take a long
+% time if the state space is big. Will explore the entire state space
+% (but only once).
+search_best([], _, Bests, Best) :-
+    member(Best, Bests).
+search_best([World|Rest], MaxScore, Bests, Best) :-
+    eval(World, Score),
     children(World, Children),
     add_best_first(Children, Rest, NewAgenda),
-    best(NewAgenda, World, ThisScore, Best).
-best([World|_], Best, BestScore, Best) :-
-    eval(World, ThisScore),
-    ThisScore =< BestScore.
+    ( Score > MaxScore ->
+          search_best(NewAgenda, Score, [World], Best);
+      Score = MaxScore ->
+          search_best(NewAgenda, Score, [World|Bests], Best);
+      Score < MaxScore ->
+          search_best(NewAgenda, MaxScore, Bests, Best)
+    ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                            Display functions                             %%%
