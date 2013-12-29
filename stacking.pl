@@ -4,8 +4,8 @@
 %% Possible extensions:
 %%  - Rotate objects
 %%  - Try 3D
-%%  - Improve output
-%%  - Visualisation
+%%  v Improve output
+%%  v Need a base
 
 %% Example run:
 %% ?- [data1].
