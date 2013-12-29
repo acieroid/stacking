@@ -172,7 +172,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(max_balance).
+strategy(max_objects_max_balance).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -193,6 +193,12 @@ eval_strategy(max_balance,
             Diffs),
     sum_list(Diffs, WeightDiff),
     Score is TotalWeight - WeightDiff.
+eval_strategy(max_objects_max_balance, World, Score) :-
+    % Maximize the number of objects *and* the balance between both
+    % containers (but gives more importance to the number of objects)
+    eval_strategy(max_objects, World, ScoreNumberObjects),
+    eval_strategy(max_balance, World, ScoreBalance),
+    Score is ScoreNumberObjects * 100 + ScoreBalance.
 eval_strategy(max_weight,
               world(_, _, PlacementLists), Score) :-
     % Maximize the total weight placed
