@@ -403,12 +403,12 @@ display_container(World, Container) :-
 display_container(World, Container, position(W, 1, D), size(W, _, D)) :-
     display_pos(World, Container, position(W, 1, D)),
     write('|'), nl,
-    W2 is W*2-1,
+    W2 is W*3-1,
     write('+'), display_line(W2), write('+'), nl, !.
 display_container(World, Container, position(W, 1, Z), size(W, H, D)) :-
     display_pos(World, Container, position(W, 1, Z)),
     write('|'), nl,
-    W2 is W*2-1,
+    W2 is W*3-1,
     write('+'), display_line(W2), write('+'),
     nl, nl,
     Z1 is Z+1,
@@ -425,24 +425,35 @@ display_container(World, Container, position(X, Y, Z), size(W, H, D)) :-
     X1 is X+1,
     display_container(World, Container, position(X1, Y, Z), size(W, H, D)), !.
 
-%% display_pos(+Container, +Pos)
+%% display_pos(+World, +Container, +Pos)
 % Display what is contained at the given position in the given container
 display_pos(World, Container, position(X, Y, Z)) :-
     % red cut, since if a position is occupied multiple times it will
     % cut successful branches, but it should never be the case
     occupied_by(World, Container, position(X, Y, Z), Id), !,
-    write(Id).
+    ( Id < 10 ->
+          write('-'), write(Id);
+      true ->
+          write(Id)
+    ).
 display_pos(_, _, _) :-
-    write(' ').
+    write('  ').
+
+%% display_containers(+World, +Containers)
+% Display the containers of a world
+display_containers(_, []).
+display_containers(World, [C|Cs]) :-
+    write('Container '), write(C), nl,
+    display_container(World, C), nl,
+    display_containers(World, Cs).
 
 %% display(+World)
 % Display all the containers of this world
-% TODO: don't depend on the fact that there is two containers
 display(World) :-
-    write('Container 1:'), nl,
-    display_container(World, 1),
-    write('Container 2:'), nl,
-    display_container(World, 2).
+    eval(World, Score),
+    write('Score: '), write(Score), nl,
+    World = world(_, Containers, _),
+    display_containers(World, Containers).
 
 %% display_verbose(+World)
 % Verbosely display a world
@@ -593,3 +604,13 @@ test_score :-
     eval(W2, Score2),
     Score0 =< Score1,
     Score1 =< Score2.
+
+
+debug :-
+    objects(Objects),
+    empty(Objects, [1, 2], EmptyWorld),
+    search([EmptyWorld], Best),
+    eval(Best, N),
+    N >= 16,
+    display_verbose(Best),
+    display(Best).
