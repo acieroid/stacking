@@ -1,9 +1,3 @@
-%% Possible extensions:
-%%  - Rotate objects
-%%  v Try 3D
-%%  v Improve output
-%%  v Need a base
-
 %% Example run:
 %% ?- [data1].
 %% ?- [stacking].
@@ -398,7 +392,6 @@ search([World|Rest], ScoreWanted, FinalWorld) :-
     add_best_first(Children, Rest, NewAgenda),
     search(NewAgenda, ScoreWanted, FinalWorld).
 
-
 %% search_best(+Agenda, +MaxScore, +CurrentBests, -Best)
 % Find one of the worlds with the highest score. Might take a long
 % time if the state space is big. Will explore the entire state space
@@ -593,15 +586,15 @@ predmsort(P, L, R) :-
 predmsort(P, 2, [X1, X2|L], L, R) :-
     !,
     call(P, Delta, X1, X2),
-    msort2(Delta, X1, X2, R). 
+    msort2(Delta, X1, X2, R).
 predmsort(_, 1, [X|L], L, [X]) :- !.
 predmsort(_, 0, L, L, []) :- !.
 predmsort(P, N, L1, L3, R) :-
     N1 is N // 2,
-    plus(N1, N2, N), 
+    plus(N1, N2, N),
     predmsort(P, N1, L1, L2, R1),
     predmsort(P, N2, L2, L3, R2),
-    predmmerge(P, R1, R2, R). 
+    predmmerge(P, R1, R2, R).
 
 msort2(<, X1, X2, [X1, X2]).
 msort2(=, X1, X2,  [X1, X2]).
@@ -614,7 +607,7 @@ predmmerge(P, [H1|T1], [H2|T2], Result) :-
     predmmerge(Delta, P, H1, H2, T1, T2, Result).
 
 predmmerge(>, P, H1, H2, T1, T2, [H2|R]) :-
-    predmmerge(P, [H1|T1], T2, R). 
+    predmmerge(P, [H1|T1], T2, R).
 predmmerge(=, P, H1, H2, T1, T2, [H1, H2|R]) :-
     predmmerge(P, T1, T2, R).
 predmmerge(<, P, H1, H2, T1, T2, [H1|R]) :-
@@ -671,13 +664,3 @@ test_score :-
     eval(W2, Score2),
     Score0 =< Score1,
     Score1 =< Score2.
-
-
-debug :-
-    objects(Objects),
-    empty(Objects, [1, 2], EmptyWorld),
-    search([EmptyWorld], Best),
-    eval(Best, N),
-    N >= 16,
-    display_verbose(Best),
-    display(Best).
