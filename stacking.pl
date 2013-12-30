@@ -311,12 +311,10 @@ is_legal(World, Container, Object, position(X, Y, Z)) :-
 % Object in Container.
 possible_positions(World, Container, Object, Positions) :-
     container_size(Container, size(Width, Height, Depth)),
-    % TODO: this kind of findall followed by include/exclude can
-    % probably be factored in only one findall
     findall(Pos,
-            in_square(position(1, 1, 1), position(Width, Height, Depth), Pos),
-            InSquare),
-    include(is_legal(World, Container, Object), InSquare, Positions).
+            (in_square(position(1, 1, 1), position(Width, Height, Depth), Pos),
+             is_legal(World, Container, Object, Pos)),
+            Positions).
 
 %% place_one(+World, -NewWorld)
 % Nondeterministically pick an object and put it in some position of a
@@ -432,7 +430,7 @@ display_pos(World, Container, position(X, Y, Z)) :-
     % cut successful branches, but it should never be the case
     occupied_by(World, Container, position(X, Y, Z), Id), !,
     ( Id < 10 ->
-          write('-'), write(Id);
+          write('_'), write(Id);
       true ->
           write(Id)
     ).
