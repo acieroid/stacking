@@ -9,7 +9,7 @@
 %%%                             Main predicates                              %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% run
+%% run(-Best, +MinimalScore)
 % Do a best-first search on the dataset currently loaded and display
 % configurations found that have their score greater than MinimalScore.
 run(Best, MinimalScore) :-
@@ -19,7 +19,7 @@ run(Best, MinimalScore) :-
     search([EmptyWorld], MinimalScore, Best),
     display(Best).
 
-%% best
+%% best(-Best)
 % Try to find the best configurations, according to eval/2. Return
 % results of increasing scores (only one result per score, ie. if
 % multiple worlds have the same score, only the first found will be
