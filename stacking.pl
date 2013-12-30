@@ -278,7 +278,7 @@ bases(Object, position(X, Y, Z), Positions) :-
 %% base_of(+World, +Container, +Pos, -Base)
 % Find the base of a position. The base can either be another object
 % (in which case Base is its Id), or the bottom of the container (and
-% Base = bottom)
+% Base = bottom).
 base_of(_, _, position(_, 1, _), bottom) :-
     !. % might cut some success branch, but not when used correctly
 base_of(World, Container, position(X, Y, Z), Base) :-
@@ -289,13 +289,27 @@ base_of(World, Container, position(X, Y, Z), Base) :-
 
 %% has_base(+World, +Container, +Pos)
 % Verify if the position has something beneath it, to serve as a
-% base
+% base.
 has_base(World, Container, Pos) :-
     base_of(World, Container, Pos, _).
 
+%% has_heavier_base(+World, +Container, +Object, +Pos)
+% Similar has_base, but true only if the base on which the object will
+% be put is heavier than the object itself.
+has_heavier_base(World, Container, _, Pos) :-
+    % bottom is considered heavier
+    base_of(World, Container, Pos, bottom),
+    % red cut but weight should fail if Base = bottom, so it's OK
+    !.
+has_heavier_base(World, Container, Object, Pos) :-
+    base_of(World, Container, Pos, Base),
+    weight(Object, Weight),
+    weight(Base, BaseWeight),
+    Weight < BaseWeight.
+
 %% is_legal(+Container, +Object, +Pos)
 % Check if it is legal to put an object at a given position in a
-% container
+% container.
 is_legal(World, Container, Object, position(X, Y, Z)) :-
     object(Object, size(Width, Height, Depth)),
     EndX is X+Width-1, EndY is Y+Height-1, EndZ is Z+Depth-1,
@@ -309,8 +323,9 @@ is_legal(World, Container, Object, position(X, Y, Z)) :-
     N > 0,
     % Get the base positions of the object
     bases(Object, position(X, Y, Z), BasePositions),
-    % Filter out the positions that have a base
-    exclude(has_base(World, Container), BasePositions, InvalidBases),
+    % Filter out the positions that have a valid base
+    %exclude(has_base(World, Container), BasePositions, InvalidBases),
+    exclude(has_heavier_base(World, Container, Object), BasePositions, InvalidBases),
     length(InvalidBases, 0). % should not have any invalid base
 
 %% possible_positions(+World, +Container, +Object, -Positions)
