@@ -29,14 +29,16 @@ run(Best, MinimalScore) :-
     display(Best).
 
 %% best
-% Try to find the best configurations, according to eval/2. Migth take
-% a long time to terminate if the state space is big
+% Try to find the best configurations, according to eval/2. Return
+% results of increasing scores (only one result per score, ie. if
+% multiple worlds have the same score, only the first found will be
+% proposed to the user).
 best(Best) :-
     objects(Objects),
     containers(Containers),
     empty(Objects, Containers, EmptyWorld),
     eval(EmptyWorld, EmptyScore),
-    search_best([EmptyWorld], EmptyScore, [EmptyWorld], Best),
+    search_best_incr([EmptyWorld], EmptyScore, [EmptyWorld], Best),
     display(Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,7 +190,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(max_objects_max_balance).
+strategy(min_unused_space).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -412,6 +414,26 @@ search_best([World|Rest], MaxScore, Bests, Best) :-
           search_best(NewAgenda, Score, [World|Bests], Best);
       Score < MaxScore ->
           search_best(NewAgenda, MaxScore, Bests, Best)
+    ).
+
+%% search_best_incr(+Agenda, +MaxScore, +CurrentBests, -Best)
+% Like search_best, but returns results increasing in score until
+% finds the best
+search_best_incr([], _, Bests, Best) :-
+    member(Best, Bests).
+search_best_incr([World|_], MaxScore, _, World) :-
+    eval(World, Score),
+    Score > MaxScore.
+search_best_incr([World|Rest], MaxScore, Bests, Best) :-
+    eval(World, Score),
+    children(World, Children),
+    add_best_first(Children, Rest, NewAgenda),
+    ( Score > MaxScore ->
+          search_best_incr(NewAgenda, Score, [World], Best);
+      Score = MaxScore ->
+          search_best_incr(NewAgenda, Score, [World|Bests], Best);
+      Score < MaxScore ->
+          search_best_incr(NewAgenda, MaxScore, Bests, Best)
     ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
