@@ -1,5 +1,3 @@
-%% Things to do:
-%%  - see TODOs in the code
 %% Possible extensions:
 %%  - Rotate objects
 %%  v Try 3D
@@ -224,8 +222,6 @@ eval_strategy(min_unused_space,
               world(_, _, PlacementLists), Score) :-
     % Minimize the unused spaces
     % This is the same as maximizing the volume
-    % TODO: this might change if we remove the necessity to have a
-    % base everywhere.
     placement_lists_volume(PlacementLists, Score).
 
 %% eval(+World, -Score)
