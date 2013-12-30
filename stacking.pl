@@ -275,16 +275,23 @@ bases(Object, position(X, Y, Z), Positions) :-
             in_square(position(X, Y, Z), position(EndX, Y, EndZ), Position),
             Positions).
 
-%% has_base(+World, +Container, +Pos)
-% Verify if the position has something beneath it, to serve as a
-% base
-has_base(_, _, position(_, 1, _)) :-  % the bottom of the container has a base
-  !. % might cut some success branch, but not when used correctly
-has_base(World, Container, position(X, Y, Z)) :-
+%% base_of(+World, +Container, +Pos, -Base)
+% Find the base of a position. The base can either be another object
+% (in which case Base is its Id), or the bottom of the container (and
+% Base = bottom)
+base_of(_, _, position(_, 1, _), bottom) :-
+    !. % might cut some success branch, but not when used correctly
+base_of(World, Container, position(X, Y, Z), Base) :-
     Y > 1,
     % a position has a base if the position beneath it is occupied
     Y1 is Y-1,
-    is_occupied(World, Container, position(X, Y1, Z)).
+    occupied_by(World, Container, position(X, Y1, Z), Base).
+
+%% has_base(+World, +Container, +Pos)
+% Verify if the position has something beneath it, to serve as a
+% base
+has_base(World, Container, Pos) :-
+    base_of(World, Container, Pos, _).
 
 %% is_legal(+Container, +Object, +Pos)
 % Check if it is legal to put an object at a given position in a
