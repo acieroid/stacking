@@ -1,6 +1,5 @@
 %% Things to do:
 %%  - see TODOs in the code
-%%  - a variant of best/1 that prints the current best score
 %% Possible extensions:
 %%  - Rotate objects
 %%  v Try 3D
@@ -345,9 +344,15 @@ is_legal(World, Container, Object, position(X, Y, Z)) :-
     % Get the base positions of the object
     bases(Object, position(X, Y, Z), BasePositions),
     % Filter out the positions that have a valid base
-    %exclude(has_base(World, Container), BasePositions, InvalidBases),
     exclude(has_heavier_base(World, Container, Object), BasePositions, InvalidBases),
-    length(InvalidBases, 0). % should not have any invalid base
+    % Variant: if accept heavier objects on top of lighter ones:
+    % exclude(has_base(World, Container), BasePositions, InvalidBases),
+    % Should at least have half of the bases that are valid
+    length(InvalidBases, NInvalidBases),
+    length(BasePositions, NBases),
+    NInvalidBases < NBases / 2.
+    % Variant: should not have any invalid base
+    % length(InvalidBases, 0).
 
 %% possible_positions(+World, +Container, +Object, -Positions)
 % Bind Positions to all the possible (legal) positions that can take
