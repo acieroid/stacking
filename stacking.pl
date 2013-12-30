@@ -1,5 +1,4 @@
 %% Things to do:
-%%  - no bigger objects on smaller ones
 %%  - see TODOs in the code
 %% Possible extensions:
 %%  - Rotate objects
@@ -92,6 +91,14 @@ placement_lists([_|Containers], [[]|Rest]) :-
 placement_list_count(P, N) :-
     length(P, N).
 
+%% placement_list_volume(+PlacementList, -Volume)
+% Measure the total volume inside a placement list
+placement_list_volume([], 0).
+placement_list_volume([Id at _|Rest], Volume) :-
+    volume(Id, Volume1),
+    placement_list_volume(Rest, Volume2),
+    Volume is Volume1 + Volume2.
+
 %% placement_list_weight(+PlacementList, -Weight)
 % Measure the total weight inside a placement list
 placement_list_weight([], 0).
@@ -108,8 +115,16 @@ placement_lists_count([P|Ps], N) :-
     placement_lists_count(Ps, N2),
     N is N1 + N2.
 
+%% placement_lists_volume(+PlacementList, -Volume)
+% Measure the total volume inside all containers
+placement_lists_volume([], 0).
+placement_lists_volume([P|Ps], Volume) :-
+    placement_list_volume(P, Volume1),
+    placement_lists_volume(Ps, Volume2),
+    Volume is Volume1 + Volume2.
+
 %% placement_lists_weight(+PlacementList, -Weight)
-% Count the total weight put inside all containers
+% Measure the total weight put inside all containers
 placement_lists_weight([], 0).
 placement_lists_weight([P|Ps], Weight) :-
     placement_list_weight(P, Weight1),
@@ -172,7 +187,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(max_objects_max_balance).
+strategy(min_unused_space).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -203,10 +218,13 @@ eval_strategy(max_weight,
               world(_, _, PlacementLists), Score) :-
     % Maximize the total weight placed
     placement_lists_weight(PlacementLists, Score).
-eval_strategy(min_space, _, _) :-
-    % Minimize the free spaces
-    % TODO: not implemented yet
-    fail.
+eval_strategy(min_unused_space,
+              world(_, _, PlacementLists), Score) :-
+    % Minimize the unused spaces
+    % This is the same as maximizing the volume
+    % TODO: this might change if we remove the necessity to have a
+    % base everywhere.
+    placement_lists_volume(PlacementLists, Score).
 
 %% eval(+World, -Score)
 % Evaluate the score of a board based on the strategy defined by
