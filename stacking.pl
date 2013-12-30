@@ -1,5 +1,6 @@
 %% Things to do:
 %%  - see TODOs in the code
+%%  - a variant of best/1 that prints the current best score
 %% Possible extensions:
 %%  - Rotate objects
 %%  v Try 3D
@@ -187,7 +188,7 @@ compare_worlds(Order, World1, World2) :-
 
 %% strategy(-Strategy)
 % Defines the strategy to use to compute the stackings.
-strategy(min_unused_space).
+strategy(max_objects_max_balance).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -488,9 +489,14 @@ display_containers(World, [C|Cs]) :-
 %% display(+World)
 % Display all the containers of this world
 display(World) :-
+    World = world(Objects, Containers, PlacementLists),
+    length(Objects, Remaining),
+    placement_lists_count(PlacementLists, Placed),
+    placement_lists_weight(PlacementLists, Weight),
     eval(World, Score),
-    write('Score: '), write(Score), nl,
-    World = world(_, Containers, _),
+    format('Objects placed: ~d (~d remaining)~n', [Placed, Remaining]),
+    format('Weight placed: ~d~n', [Weight]),
+    format('Score: ~1f~n', [Score]),
     display_containers(World, Containers).
 
 %% display_verbose(+World)
