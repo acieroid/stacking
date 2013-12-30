@@ -33,6 +33,31 @@ best(Best) :-
     display(Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                Parameters                                %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% strategy(-Strategy)
+% Defines the strategy to use to compute the stackings.
+% Possible strategies: min_unused_space, max_objects, max_balance,
+% max_objects_max_balance, max_weight
+strategy(min_unused_space).
+
+%% base_factor(-BaseFactor)
+% The percentage of invalid base that we can accept for an object.
+% If 1, objects can be placed anywhere (that doesn't make much sense).
+% If 0, objects can only be placed if they have a full base.
+% For a real-world stacking problem, 1 would be a good value.
+% For a tetris-like problem, a small value > 0 (eg. 0.001) would be a
+% good value.
+base_factor(0.5).
+
+%% container_size(+Container, -Size)
+% Specifies the size of the container (10x10x1 for each container in
+% the original assignment)
+container_size(1, size(10, 10, 1)).
+container_size(2, size(10, 10, 1)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         World representation                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % For object representation, see the data*.pl files. Objects Ids
@@ -58,12 +83,6 @@ weight(Object, Weight) :-
 %% X at Y
 % Operator used to identify position of objects
 :- op(500, xfx, at).
-
-%% container_size(+Container, -Size)
-% Specifies the size of the container (10x10x1 for each container in
-% the original assignment)
-container_size(1, size(10, 10, 1)).
-container_size(2, size(10, 10, 1)).
 
 %% containers(-Containers)
 % Return the list of existing containers
@@ -178,10 +197,6 @@ compare_worlds(Order, World1, World2) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                              Heuristics                                  %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% strategy(-Strategy)
-% Defines the strategy to use to compute the stackings.
-strategy(min_unused_space).
 
 %% eval_strategy(+Strategy, +World, -Score)
 % Evaluate the score of a board with the given strategy
@@ -335,14 +350,14 @@ is_legal(World, Container, Object, position(X, Y, Z)) :-
     bases(Object, position(X, Y, Z), BasePositions),
     % Filter out the positions that have a valid base
     exclude(has_heavier_base(World, Container, Object), BasePositions, InvalidBases),
-    % Variant: if accept heavier objects on top of lighter ones:
-    % exclude(has_base(World, Container), BasePositions, InvalidBases),
+    % Variant: if we accept heavier objects on top of lighter ones:
+    %   exclude(has_base(World, Container), BasePositions, InvalidBases),
+
     % Should at least have half of the bases that are valid
     length(InvalidBases, NInvalidBases),
     length(BasePositions, NBases),
-    NInvalidBases < NBases / 2.
-    % Variant: should not have any invalid base
-    % length(InvalidBases, 0).
+    base_factor(BaseFactor),
+    NInvalidBases =< NBases * BaseFactor.
 
 %% possible_positions(+World, +Container, +Object, -Positions)
 % Bind Positions to all the possible (legal) positions that can take
