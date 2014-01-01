@@ -3,33 +3,44 @@
 %% ?- [stacking].
 %% ?- run(Best, 15)
 %% OR
+%% ?- best_incr(Best)
+%% OR
 %% ?- best(Best)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                             Main predicates                              %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% run(-Best, +MinimalScore)
+%% run(+MinimalScore, -Best)
 % Do a best-first search on the dataset currently loaded and display
 % configurations found that have their score greater than MinimalScore.
-run(Best, MinimalScore) :-
+run(MinimalScore, Best) :-
     objects(Objects),
     containers(Containers),
     empty(Objects, Containers, EmptyWorld),
     search([EmptyWorld], MinimalScore, Best),
     display(Best).
 
-%% best(-Best)
+%% best_incr(-Best)
 % Try to find the best configurations, according to eval/2. Return
 % results of increasing scores (only one result per score, ie. if
 % multiple worlds have the same score, only the first found will be
 % proposed to the user).
-best(Best) :-
+best_incr(Best) :-
     objects(Objects),
     containers(Containers),
     empty(Objects, Containers, EmptyWorld),
     eval(EmptyWorld, EmptyScore),
     search_best_incr([EmptyWorld], EmptyScore, [EmptyWorld], Best),
+    display(Best).
+
+%% best(-Best)
+best(Best) :-
+    objects(Objects),
+    containers(Containers),
+    empty(Objects, Containers, EmptyWorld),
+    eval(EmptyWorld, EmptyScore),
+    search_best([EmptyWorld], EmptyScore, [EmptyWorld], Best),
     display(Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -455,7 +466,7 @@ display_line(0) :- !.
 display_line(N) :-
     N > 0,
     N1 is N-1,
-    write('_'),
+    write('-'),
     display_line(N1).
 
 %% display_container(+Container)
@@ -468,7 +479,7 @@ display_container(World, Container) :-
     % case, that's fine
     write('|'),
     display_container(World, Container, position(1, H, 1), size(W, H, D)),
-    nl, nl.
+    nl.
 
 display_container(World, Container, position(W, 1, D), size(W, _, D)) :-
     display_pos(World, Container, position(W, 1, D)),
