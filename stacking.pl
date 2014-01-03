@@ -343,7 +343,7 @@ has_heavier_base(World, Container, Object, Pos) :-
     weight(Base, BaseWeight),
     Weight < BaseWeight.
 
-%% is_legal(+Container, +Object, +Pos)
+%% is_legal(+World, +Container, +Object, +Pos)
 % Check if it is legal to put an object at a given position in a
 % container.
 is_legal(World, Container, Object, position(X, Y, Z)) :-
