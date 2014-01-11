@@ -53,16 +53,15 @@ best(Best) :-
 % Defines the strategy to use to compute the stackings.
 % Possible strategies: min_unused_space, max_objects, max_balance,
 % max_objects_max_balance, max_weight
-strategy(max_balance).
+strategy(min_unused_space).
 
 %% base_factor(-BaseFactor)
 % The percentage of invalid base that we can accept for an object.
 % If 1, objects can be placed anywhere (that doesn't make much sense).
 % If 0, objects can only be placed if they have a full base.
 % For a real-world stacking problem, 1 would be a good value.
-% For a tetris-like problem, a small value > 0 (eg. 0.001) would be a
-% good value.
-base_factor(0.5).
+% For a tetris-like problem, a value close to 1 would be a good value.
+base_factor(0).
 
 %% container_size(+Container, -Size)
 % Specifies the size of the container (10x10x1 for each container in
