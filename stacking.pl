@@ -1,7 +1,7 @@
 %% Example run:
 %% ?- [data1].
 %% ?- [stacking].
-%% ?- run(Best, 15)
+%% ?- run(15, Best)
 %% OR
 %% ?- best_incr(Best)
 %% OR
@@ -35,6 +35,8 @@ best_incr(Best) :-
     display(Best).
 
 %% best(-Best)
+% Explore the entire state space to find the optimal solutions
+% (according to eval/2).
 best(Best) :-
     objects(Objects),
     containers(Containers),
@@ -51,7 +53,7 @@ best(Best) :-
 % Defines the strategy to use to compute the stackings.
 % Possible strategies: min_unused_space, max_objects, max_balance,
 % max_objects_max_balance, max_weight
-strategy(min_unused_space).
+strategy(max_balance).
 
 %% base_factor(-BaseFactor)
 % The percentage of invalid base that we can accept for an object.
@@ -71,8 +73,7 @@ container_size(2, size(10, 10, 1)).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         World representation                             %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% For object representation, see the data*.pl files. Objects Ids
-% should start from 1 and increase 1 by 1.
+% For object representation, see the data*.pl files.
 
 %% objects(-Objects)
 % Find all the objects
@@ -92,7 +93,7 @@ weight(Object, Weight) :-
     volume(Object, Weight).
 
 %% X at Y
-% Operator used to identify position of objects
+% Operator used to identify position of objects, eg. '1 at position(1,2,3)'.
 :- op(500, xfx, at).
 
 %% containers(-Containers)
@@ -263,7 +264,7 @@ is_inside(Container, position(X, Y, Z)) :-
     between(1, Height, Y),
     between(1, Depth, Z).
 
-%% occupied_by(+Container, +Pos, -Id)
+%% occupied_by(+World, +Container, +Pos, -Id)
 % Return the object that occupies a certain position in a
 % container. Fail if no object occupies this position.
 occupied_by(World, Container, position(X, Y, Z), Id) :-
